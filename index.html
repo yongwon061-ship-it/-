@@ -118,7 +118,7 @@
     }
     .char-select-card:hover { border-color: #F1C40F; background: #323652; }
 
-    /* ⚙️ 설정 모달 개선 스타일 */
+    /* ⚙️ 설정 모달 스타일 */
     .setting-card { background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px; max-height: 85vh; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
     .setting-add-row { display: flex; gap: 8px; align-items: center; }
     .btn-add-char {
@@ -136,6 +136,20 @@
       cursor: pointer; transition: 0.2s;
     }
     .btn-del-char:hover { background: #E74C3C; color: #FFF; }
+
+    /* ON/OFF 스위치 토글 스타일 */
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #4A4D68; transition: .3s; border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #2ECC71; }
+    input:checked + .slider:before { transform: translateX(22px); }
 
     .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .setting-item { background: #282B42; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -233,11 +247,11 @@
 
   <script>
     const defaultData = [
-      { name: "종려", level: 0, element: "geo", photoUrl: "", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
-      { name: "카즈하", level: 0, element: "anemo", photoUrl: "", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
+      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
+      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
     ];
 
-    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v8_data")) || defaultData;
+    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v9_data")) || defaultData;
     const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -245,16 +259,20 @@
 
     let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
 
-    function saveData() { localStorage.setItem("genshin_roulette_v8_data", JSON.stringify(charData)); }
-    function getActiveChars() { return charData.filter(c => c.level < 2); }
+    function saveData() { localStorage.setItem("genshin_roulette_v9_data", JSON.stringify(charData)); }
+    
+    // ON(enabled) 상태이면서 종결(level 2)이 아닌 캐릭터만 룰렛 대상으로 선택
+    function getActiveChars() { 
+      return charData.filter(c => c.enabled !== false && c.level < 2); 
+    }
 
     function draw() {
       const activeChars = getActiveChars();
       ctx.clearRect(0, 0, 400, 400);
 
       if (activeChars.length === 0) {
-        ctx.fillStyle = "#FFF"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText("모든 캐릭터 종결 완료!", 200, 200);
+        ctx.fillStyle = "#FFF"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("룰렛 대상 캐릭터가 없습니다!", 200, 200);
         spinBtn.disabled = true; return;
       } else { spinBtn.disabled = false; }
 
@@ -360,10 +378,13 @@
       const listContainer = document.getElementById("charCardList");
       listContainer.innerHTML = "";
 
-      if (charData.length === 0) {
-        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>등록된 캐릭터가 없습니다.</div>";
+      // ON 상태인 캐릭터만 도감에 표시
+      const visibleChars = charData.filter(c => c.enabled !== false);
+
+      if (visibleChars.length === 0) {
+        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>활성화된 캐릭터가 없습니다.</div>";
       } else {
-        charData.forEach((c) => {
+        visibleChars.forEach((c) => {
           let badgeText = "🔒 미해금";
           let badgeClass = "badge-none";
           if (c.level === 1) { badgeText = "🟠 준종결"; badgeClass = "badge-semi"; }
@@ -395,7 +416,7 @@
     function addCharacter() {
       const name = document.getElementById("newCharName").value.trim();
       if (!name) return;
-      charData.push({ name: name, level: 0, element: "pyro", photoUrl: "", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
+      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
       document.getElementById("newCharName").value = ""; renderSettingList();
     }
     function deleteChar(idx) { charData.splice(idx, 1); renderSettingList(); }
@@ -403,10 +424,18 @@
     function renderSettingList() {
       const container = document.getElementById("settingList"); container.innerHTML = "";
       charData.forEach((c, i) => {
+        if (c.enabled === undefined) c.enabled = true; // 기본값 예외 처리
+
         const item = document.createElement("div"); item.className = "setting-item";
         item.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="color:#F1C40F; font-size:14px;">${c.name}</strong>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label class="switch">
+                <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="charData[${i}].enabled = this.checked">
+                <span class="slider"></span>
+              </label>
+              <strong style="color:#F1C40F; font-size:14px;">${c.name}</strong>
+            </div>
             <button class="btn-del-char" onclick="deleteChar(${i})">삭제</button>
           </div>
           <div style="display:flex; gap:6px;">
