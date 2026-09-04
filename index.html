@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>원신 육성 룰렛</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      font-family: 'Segoe UI', -apple-system, sans-serif;
+      background: #12131C; color: #FFF;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 20px 10px;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 15px; color: #F1C40F; text-align: center; }
+
+    /* 룰렛 */
+    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
+    @media (min-width: 480px) { .roulette-wrapper { width: 380px; height: 380px; } }
+    #canvas { width: 100%; height: 100%; background: #1A1C29; border-radius: 50%; border: 4px solid #2C2F48; }
+
+    /* 버튼 컨트롤 영역 */
+    .controls { display: flex; gap: 8px; margin-top: 20px; width: 100%; max-width: 380px; }
+    .btn {
+      flex: 1; padding: 14px 0; font-size: 15px; cursor: pointer; border: none;
+      border-radius: 12px; font-weight: bold; transition: 0.2s;
+    }
+    .btn-spin { background: linear-gradient(135deg, #FF4B2B, #FF416C); color: #FFF; flex: 1.2; }
+    .btn-spin:disabled { background: #4A4D68; color: #888; cursor: not-allowed; }
+    .btn-list { background: linear-gradient(135deg, #2193b0, #6dd5ed); color: #FFF; }
+    .btn-setting { background: linear-gradient(135deg, #4A00E0, #8E2DE2); color: #FFF; }
+
+    /* 모달 공통 */
+    .modal-backdrop {
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+      justify-content: center; align-items: center; z-index: 1000; padding: 15px;
+    }
+
+    /* 🎯 결과 카드 모달 & 도감 상세 모달 */
+    .result-card {
+      position: relative; background: #1E2030; border: 2px solid #F1C40F;
+      border-radius: 20px; width: 100%; max-width: 420px; padding: 20px;
+      box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+      display: flex; flex-direction: column; align-items: center;
+      animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    .close-btn {
+      position: absolute; top: 12px; right: 15px; width: 32px; height: 32px;
+      border-radius: 50%; background: rgba(255,255,255,0.1); border: none;
+      color: #AAA; font-size: 20px; cursor: pointer; z-index: 10;
+    }
+
+    /* 상단 비주얼 영역 */
+    .char-avatar-frame {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: #2A2D45; border: 4px solid #777;
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      margin-top: 5px; margin-bottom: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    .char-avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* 원소별 테두리 색상 */
+    .elem-pyro { border-color: #FF4D4D !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.4); }
+    .elem-hydro { border-color: #3399FF !important; box-shadow: 0 0 15px rgba(51, 153, 255, 0.4); }
+    .elem-anemo { border-color: #2ECC71 !important; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
+    .elem-electro { border-color: #A64DFF !important; box-shadow: 0 0 15px rgba(166, 77, 255, 0.4); }
+    .elem-dendro { border-color: #7ACC29 !important; box-shadow: 0 0 15px rgba(122, 204, 41, 0.4); }
+    .elem-cryo { border-color: #80E5FF !important; box-shadow: 0 0 15px rgba(128, 229, 255, 0.4); }
+    .elem-geo { border-color: #F1C40F !important; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+
+    .char-name-title { font-size: 20px; font-weight: bold; color: #FFF; margin-bottom: 4px; }
+    .char-status-badge { font-size: 13px; font-weight: bold; padding: 3px 10px; border-radius: 12px; margin-bottom: 15px; }
+    .badge-none { background: rgba(149, 165, 166, 0.2); color: #95A5A6; border: 1px solid #95A5A6; }
+    .badge-semi { background: rgba(243, 156, 18, 0.2); color: #F39C12; border: 1px solid #F39C12; }
+    .badge-final { background: rgba(231, 76, 60, 0.2); color: #E74C3C; border: 1px solid #E74C3C; }
+
+    /* 하단 스펙 그리드 레이아웃 */
+    .spec-grid { width: 100%; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+    .spec-row { background: #141522; padding: 8px 12px; border-radius: 8px; border: 1px solid #2C2F48; display: flex; align-items: center; }
+    .spec-row-multi { display: grid; gap: 8px; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    
+    .spec-item { background: #141522; padding: 8px 10px; border-radius: 8px; border: 1px solid #2C2F48; text-align: center; }
+    .spec-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+    .spec-val { font-weight: bold; color: #FFF; }
+
+    /* 메모 박스 */
+    .spec-memo-box {
+      background: #141522; border: 1px dashed #3F4468; border-radius: 8px;
+      padding: 10px 12px; font-size: 12px; color: #DDD; line-height: 1.4;
+      white-space: pre-wrap; word-break: break-word; text-align: left;
+    }
+
+    /* 잠김 안내 상자 */
+    .locked-box {
+      background: #141522; border: 1px dashed #E74C3C; border-radius: 12px;
+      padding: 25px 15px; text-align: center; color: #888; font-size: 13px; line-height: 1.6;
+      width: 100%; margin-top: 10px;
+    }
+
+    /* 📋 목록 모달 스타일 */
+    .list-modal-card {
+      background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px;
+      max-height: 80vh; padding: 20px; display: flex; flex-direction: column; gap: 12px;
+      position: relative; border: 1px solid #3F4468;
+    }
+    .char-card-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+    .char-select-card {
+      background: #282B42; border-radius: 12px; padding: 12px; display: flex;
+      align-items: center; justify-content: space-between; cursor: pointer;
+      border: 1px solid #3F4468; transition: 0.2s;
+    }
+    .char-select-card:hover { border-color: #F1C40F; background: #323652; }
+
+    /* ⚙️ 설정 모달 개선 스타일 */
+    .setting-card { background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px; max-height: 85vh; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+    .setting-add-row { display: flex; gap: 8px; align-items: center; }
+    .btn-add-char {
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: #FFF; border: none; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; font-weight: bold;
+      cursor: pointer; white-space: nowrap; transition: 0.2s;
+    }
+    .btn-add-char:hover { opacity: 0.9; }
+
+    .btn-del-char {
+      background: rgba(231, 76, 60, 0.15);
+      color: #E74C3C; border: 1px solid #E74C3C;
+      border-radius: 6px; padding: 2px 8px; font-size: 11px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-del-char:hover { background: #E74C3C; color: #FFF; }
+
+    .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .setting-item { background: #282B42; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    input[type="text"], select, textarea { background: #141522; color: #FFF; border: 1px solid #3F4468; padding: 8px; border-radius: 6px; font-size: 12px; width: 100%; }
+    textarea { resize: vertical; min-height: 40px; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+  <h1>🗡️ 원신 육성 룰렛</h1>
+
+  <div class="roulette-wrapper">
+    <canvas id="canvas" width="400" height="400"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-spin" id="spinBtn" onclick="spin()">🎲 돌리기</button>
+    <button class="btn btn-list" onclick="openList()">📋 목록</button>
+    <button class="btn btn-setting" onclick="openSetting()">⚙️ 설정</button>
+  </div>
+
+  <!-- 결과 & 상세 스펙 모달 -->
+  <div id="resultModal" class="modal-backdrop">
+    <div class="result-card">
+      <button class="close-btn" onclick="closeResult()">&times;</button>
+      
+      <div class="char-avatar-frame" id="resultAvatar">
+        <span style="color: #6C7293; font-size: 11px;">사진 없음</span>
+      </div>
+      <div class="char-name-title" id="resultName">캐릭터 이름</div>
+      <div class="char-status-badge" id="resultStatus">육성 단계</div>
+      
+      <!-- 잠김 안내 창 -->
+      <div id="lockedContainer" class="locked-box" style="display: none;">
+        🔒 <strong style="color:#FFF;">미해금 캐릭터</strong><br>
+        아직 룰렛에서 선택되지 않았습니다.<br>룰렛을 돌려서 캐릭터 스펙을 해금해보세요!
+      </div>
+
+      <!-- 실제 스펙 영역 -->
+      <div id="specContainer" class="spec-grid">
+        <div class="spec-row"><span class="spec-label" style="width:50px;">무기</span><span class="spec-val" id="valWeapon">-</span></div>
+        <div class="spec-row"><span class="spec-label" style="width:50px;">성유물</span><span class="spec-val" id="valArtifact">-</span></div>
+        
+        <div class="spec-row-multi grid-3">
+          <div class="spec-item"><div class="spec-label">공격력</div><div class="spec-val" id="valAtk">-</div></div>
+          <div class="spec-item"><div class="spec-label">방어력</div><div class="spec-val" id="valDef">-</div></div>
+          <div class="spec-item"><div class="spec-label">체력</div><div class="spec-val" id="valHp">-</div></div>
+        </div>
+
+        <div class="spec-row-multi grid-2">
+          <div class="spec-item"><div class="spec-label">치명타 확률</div><div class="spec-val" id="valCritRate">-</div></div>
+          <div class="spec-item"><div class="spec-label">치명타 피해</div><div class="spec-val" id="valCritDmg">-</div></div>
+        </div>
+
+        <div class="spec-row-multi grid-2">
+          <div class="spec-item"><div class="spec-label">원소 마스터리</div><div class="spec-val" id="valEm">-</div></div>
+          <div class="spec-item"><div class="spec-label">원소 충전 효율</div><div class="spec-val" id="valEr">-</div></div>
+        </div>
+
+        <div id="memoRow" class="spec-memo-box">
+          <div class="spec-label" style="margin-bottom: 4px; color: #F1C40F;">📌 참고 메모</div>
+          <div id="valMemo" style="color: #EEE;">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📋 캐릭터 목록 모달 -->
+  <div id="listModal" class="modal-backdrop">
+    <div class="list-modal-card">
+      <button class="close-btn" onclick="closeList()">&times;</button>
+      <h2 style="font-size: 16px; color: #6dd5ed; margin-bottom: 5px;">📋 캐릭터 도감</h2>
+      <div class="char-card-list" id="charCardList"></div>
+    </div>
+  </div>
+
+  <!-- ⚙️ 설정 모달 -->
+  <div id="settingModal" class="modal-backdrop">
+    <div class="setting-card">
+      <button class="close-btn" onclick="closeSetting()">&times;</button>
+      <h2 style="font-size: 16px; color: #F1C40F;">⚙️ 캐릭터 세팅 및 스펙 설정</h2>
+      
+      <!-- 캐릭터 추가 영역 -->
+      <div class="setting-add-row">
+        <input type="text" id="newCharName" placeholder="새 캐릭터 이름 입력">
+        <button class="btn-add-char" onclick="addCharacter()">+ 추가</button>
+      </div>
+
+      <div class="setting-list" id="settingList"></div>
+      <div style="text-align: right; margin-top: 5px;">
+        <button class="btn btn-setting" style="padding: 10px 20px; font-size: 13px;" onclick="closeSetting()">저장 및 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultData = [
+      { name: "종려", level: 0, element: "geo", photoUrl: "", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
+      { name: "카즈하", level: 0, element: "anemo", photoUrl: "", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
+    ];
+
+    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v8_data")) || defaultData;
+    const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+
+    let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
+
+    function saveData() { localStorage.setItem("genshin_roulette_v8_data", JSON.stringify(charData)); }
+    function getActiveChars() { return charData.filter(c => c.level < 2); }
+
+    function draw() {
+      const activeChars = getActiveChars();
+      ctx.clearRect(0, 0, 400, 400);
+
+      if (activeChars.length === 0) {
+        ctx.fillStyle = "#FFF"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("모든 캐릭터 종결 완료!", 200, 200);
+        spinBtn.disabled = true; return;
+      } else { spinBtn.disabled = false; }
+
+      const arc = (2 * Math.PI) / activeChars.length;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 15px sans-serif";
+
+      for (let i = 0; i < activeChars.length; i++) {
+        const angle = startAngle + i * arc;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath(); ctx.arc(200, 200, 185, angle, angle + arc, false); ctx.arc(200, 200, 0, angle + arc, angle, true); ctx.fill();
+
+        ctx.save(); ctx.fillStyle = "#FFF";
+        ctx.translate(200 + Math.cos(angle + arc / 2) * 125, 200 + Math.sin(angle + arc / 2) * 125);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+        
+        let label = activeChars[i].name;
+        if(activeChars[i].level === 1) label += "\n(준종결)";
+        ctx.fillText(label, 0, 0); ctx.restore();
+      }
+
+      ctx.fillStyle = "#FFF"; ctx.beginPath(); ctx.moveTo(188, 15); ctx.lineTo(212, 15); ctx.lineTo(200, 38); ctx.fill();
+    }
+
+    function rotate() {
+      spinTime += 30;
+      if (spinTime >= spinTimeTotal) { stopRotate(); return; }
+      startAngle += ((spinTimeTotal - spinTime) / spinTimeTotal * 20 * Math.PI / 180);
+      draw(); requestAnimationFrame(rotate);
+    }
+
+    function stopRotate() {
+      isSpinning = false;
+      const activeChars = getActiveChars();
+      const arc = (2 * Math.PI) / activeChars.length;
+      const degrees = startAngle * 180 / Math.PI + 90;
+      const index = Math.floor((360 - (degrees % 360)) / (arc * 180 / Math.PI)) % activeChars.length;
+      
+      const selected = activeChars[index];
+      selected.level += 1;
+
+      showCharDetail(selected);
+      saveData(); draw();
+    }
+
+    function showCharDetail(selected) {
+      document.getElementById("resultName").innerText = selected.name;
+      const statusEl = document.getElementById("resultStatus");
+      const lockedContainer = document.getElementById("lockedContainer");
+      const specContainer = document.getElementById("specContainer");
+
+      const avatar = document.getElementById("resultAvatar");
+      avatar.className = `char-avatar-frame elem-${selected.element || 'pyro'}`;
+      avatar.innerHTML = selected.photoUrl ? `<img src="${selected.photoUrl}">` : '<span style="color:#6C7293; font-size:11px;">사진 없음</span>';
+
+      if (selected.level === 0) {
+        statusEl.innerText = "🔒 미해금 캐릭터";
+        statusEl.className = "char-status-badge badge-none";
+        lockedContainer.style.display = "block";
+        specContainer.style.display = "none";
+      } else {
+        lockedContainer.style.display = "none";
+        specContainer.style.display = "flex";
+
+        if (selected.level === 1) {
+          statusEl.innerText = "🟠 준종결 달성 (육성중)";
+          statusEl.className = "char-status-badge badge-semi";
+        } else {
+          statusEl.innerText = "🔴 종결 완료!";
+          statusEl.className = "char-status-badge badge-final";
+        }
+
+        document.getElementById("valWeapon").innerText = selected.weapon || "-";
+        document.getElementById("valArtifact").innerText = selected.artifact || "-";
+        document.getElementById("valAtk").innerText = selected.atk || "-";
+        document.getElementById("valDef").innerText = selected.def || "-";
+        document.getElementById("valHp").innerText = selected.hp || "-";
+        document.getElementById("valCritRate").innerText = selected.critRate || "-";
+        document.getElementById("valCritDmg").innerText = selected.critDmg || "-";
+        document.getElementById("valEm").innerText = selected.em || "-";
+        document.getElementById("valEr").innerText = selected.er || "-";
+
+        const memoBox = document.getElementById("memoRow");
+        if (selected.memo && selected.memo.trim() !== "") {
+          document.getElementById("valMemo").innerText = selected.memo;
+          memoBox.style.display = "block";
+        } else {
+          memoBox.style.display = "none";
+        }
+      }
+
+      document.getElementById("resultModal").style.display = "flex";
+    }
+
+    function spin() {
+      if (isSpinning || getActiveChars().length === 0) return;
+      isSpinning = true; spinTime = 0; spinTimeTotal = Math.random() * 3000 + 4000;
+      rotate();
+    }
+
+    function closeResult() { document.getElementById("resultModal").style.display = "none"; }
+    
+    function openList() {
+      const listContainer = document.getElementById("charCardList");
+      listContainer.innerHTML = "";
+
+      if (charData.length === 0) {
+        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>등록된 캐릭터가 없습니다.</div>";
+      } else {
+        charData.forEach((c) => {
+          let badgeText = "🔒 미해금";
+          let badgeClass = "badge-none";
+          if (c.level === 1) { badgeText = "🟠 준종결"; badgeClass = "badge-semi"; }
+          else if (c.level >= 2) { badgeText = "🔴 종결 완료"; badgeClass = "badge-final"; }
+
+          const card = document.createElement("div");
+          card.className = "char-select-card";
+          card.onclick = () => { closeList(); showCharDetail(c); };
+          card.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="char-avatar-frame elem-${c.element || 'pyro'}" style="width:40px; height:40px; margin:0; border-width:2px;">
+                ${c.photoUrl ? `<img src="${c.photoUrl}">` : '<span style="font-size:9px; color:#888;">N/A</span>'}
+              </div>
+              <strong style="font-size:14px; color:#FFF;">${c.name}</strong>
+            </div>
+            <span class="char-status-badge ${badgeClass}" style="margin:0;">${badgeText}</span>
+          `;
+          listContainer.appendChild(card);
+        });
+      }
+
+      document.getElementById("listModal").style.display = "flex";
+    }
+    function closeList() { document.getElementById("listModal").style.display = "none"; }
+
+    function openSetting() { renderSettingList(); document.getElementById("settingModal").style.display = "flex"; }
+    function closeSetting() { document.getElementById("settingModal").style.display = "none"; saveData(); draw(); }
+
+    function addCharacter() {
+      const name = document.getElementById("newCharName").value.trim();
+      if (!name) return;
+      charData.push({ name: name, level: 0, element: "pyro", photoUrl: "", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
+      document.getElementById("newCharName").value = ""; renderSettingList();
+    }
+    function deleteChar(idx) { charData.splice(idx, 1); renderSettingList(); }
+
+    function renderSettingList() {
+      const container = document.getElementById("settingList"); container.innerHTML = "";
+      charData.forEach((c, i) => {
+        const item = document.createElement("div"); item.className = "setting-item";
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:#F1C40F; font-size:14px;">${c.name}</strong>
+            <button class="btn-del-char" onclick="deleteChar(${i})">삭제</button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <select onchange="charData[${i}].element=this.value">
+              <option value="pyro" ${c.element==='pyro'?'selected':''}>🔥 불</option>
+              <option value="hydro" ${c.element==='hydro'?'selected':''}>💧 물</option>
+              <option value="anemo" ${c.element==='anemo'?'selected':''}>🍃 바람</option>
+              <option value="electro" ${c.element==='electro'?'selected':''}>⚡ 번개</option>
+              <option value="dendro" ${c.element==='dendro'?'selected':''}>🌿 풀</option>
+              <option value="cryo" ${c.element==='cryo'?'selected':''}>❄️ 얼음</option>
+              <option value="geo" ${c.element==='geo'?'selected':''}>🪨 바위</option>
+            </select>
+            <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
+          </div>
+          <div style="display:flex; gap:4px;">
+            <input type="text" placeholder="무기" value="${c.weapon||''}" onchange="charData[${i}].weapon=this.value">
+            <input type="text" placeholder="성유물" value="${c.artifact||''}" onchange="charData[${i}].artifact=this.value">
+          </div>
+          <div style="display:flex; gap:4px;">
+            <input type="text" placeholder="공격력" value="${c.atk||''}" onchange="charData[${i}].atk=this.value">
+            <input type="text" placeholder="방어력" value="${c.def||''}" onchange="charData[${i}].def=this.value">
+            <input type="text" placeholder="체력" value="${c.hp||''}" onchange="charData[${i}].hp=this.value">
+          </div>
+          <div style="display:flex; gap:4px;">
+            <input type="text" placeholder="치확" value="${c.critRate||''}" onchange="charData[${i}].critRate=this.value">
+            <input type="text" placeholder="치피" value="${c.critDmg||''}" onchange="charData[${i}].critDmg=this.value">
+            <input type="text" placeholder="원마" value="${c.em||''}" onchange="charData[${i}].em=this.value">
+            <input type="text" placeholder="원충" value="${c.er||''}" onchange="charData[${i}].er=this.value">
+          </div>
+          <div>
+            <textarea placeholder="📌 참고 메모 (예: 페보 보유 시 원충 요구량 감소, 파티 조합 등)" onchange="charData[${i}].memo=this.value">${c.memo||''}</textarea>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    draw();
+  </script>
+</body>
+</html>
