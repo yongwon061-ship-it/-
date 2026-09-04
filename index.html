@@ -440,13 +440,13 @@
           </div>
           <div style="display:flex; gap:6px;">
             <select onchange="charData[${i}].element=this.value">
-              <option value="pyro" ${c.element==='pyro'?'selected':''}>🔥 불</option>
-              <option value="hydro" ${c.element==='hydro'?'selected':''}>💧 물</option>
-              <option value="anemo" ${c.element==='anemo'?'selected':''}>🍃 바람</option>
-              <option value="electro" ${c.element==='electro'?'selected':''}>⚡ 번개</option>
-              <option value="dendro" ${c.element==='dendro'?'selected':''}>🌿 풀</option>
-              <option value="cryo" ${c.element==='cryo'?'selected':''}>❄️ 얼음</option>
-              <option value="geo" ${c.element==='geo'?'selected':''}>🪨 바위</option>
+              <option value="pyro" ${c.element==='pyro'?'selected':''}> 불</option>
+              <option value="hydro" ${c.element==='hydro'?'selected':''}> 물</option>
+              <option value="anemo" ${c.element==='anemo'?'selected':''}> 바람</option>
+              <option value="electro" ${c.element==='electro'?'selected':''}> 번개</option>
+              <option value="dendro" ${c.element==='dendro'?'selected':''}> 풀</option>
+              <option value="cryo" ${c.element==='cryo'?'selected':''}> 얼음</option>
+              <option value="geo" ${c.element==='geo'?'selected':''}> 바위</option>
             </select>
             <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
           </div>
