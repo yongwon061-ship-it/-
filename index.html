@@ -184,7 +184,7 @@
 </head>
 <body>
 
-  <h1>🗡️ 원신 육성 룰렛</h1>
+  <h1> 원신 육성 룰렛</h1>
 
   <div class="roulette-wrapper">
     <canvas id="canvas" width="400" height="400"></canvas>
@@ -394,9 +394,9 @@
         }
 
         /* 특성 이미지 & 레벨 출력 */
-        setTalentBox("boxTalentNa", selected.imgNa, "⚔️");
-        setTalentBox("boxTalentE", selected.imgE, "🌀");
-        setTalentBox("boxTalentQ", selected.imgQ, "💥");
+        setTalentBox("boxTalentNa", selected.imgNa, "");
+        setTalentBox("boxTalentE", selected.imgE, "");
+        setTalentBox("boxTalentQ", selected.imgQ, "");
 
         document.getElementById("valTalentNa").innerText = selected.talentNa || "1";
         document.getElementById("valTalentE").innerText = selected.talentE || "1";
@@ -497,13 +497,13 @@
           </div>
           <div style="display:flex; gap:6px;">
             <select onchange="charData[${i}].element=this.value">
-              <option value="pyro" ${c.element==='pyro'?'selected':''}>🔥 불</option>
-              <option value="hydro" ${c.element==='hydro'?'selected':''}>💧 물</option>
-              <option value="anemo" ${c.element==='anemo'?'selected':''}>🍃 바람</option>
-              <option value="electro" ${c.element==='electro'?'selected':''}>⚡ 번개</option>
-              <option value="dendro" ${c.element==='dendro'?'selected':''}>🌿 풀</option>
-              <option value="cryo" ${c.element==='cryo'?'selected':''}>❄️ 얼음</option>
-              <option value="geo" ${c.element==='geo'?'selected':''}>🪨 바위</option>
+              <option value="pyro" ${c.element==='pyro'?'selected':''}> 불</option>
+              <option value="hydro" ${c.element==='hydro'?'selected':''}> 물</option>
+              <option value="anemo" ${c.element==='anemo'?'selected':''}> 바람</option>
+              <option value="electro" ${c.element==='electro'?'selected':''}> 번개</option>
+              <option value="dendro" ${c.element==='dendro'?'selected':''}> 풀</option>
+              <option value="cryo" ${c.element==='cryo'?'selected':''}> 얼음</option>
+              <option value="geo" ${c.element==='geo'?'selected':''}> 바위</option>
             </select>
             <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
           </div>
