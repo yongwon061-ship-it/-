@@ -90,6 +90,10 @@
     .spec-label { font-size: 11px; color: #888; margin-bottom: 2px; }
     .spec-val { font-weight: bold; color: #FFF; }
 
+    /* 특성 스타일 특화 */
+    .talent-box { background: rgba(241, 196, 15, 0.05); border-color: rgba(241, 196, 15, 0.3); }
+    .talent-val { color: #F1C40F; font-size: 14px; }
+
     /* 메모 박스 */
     .spec-memo-box {
       background: #141522; border: 1px dashed #3F4468; border-radius: 8px;
@@ -190,6 +194,13 @@
 
       <!-- 실제 스펙 영역 -->
       <div id="specContainer" class="spec-grid">
+        <!-- 무기 위: 특성 3열 배치 -->
+        <div class="spec-row-multi grid-3">
+          <div class="spec-item talent-box"><div class="spec-label">⚔️ 일반 공격</div><div class="spec-val talent-val" id="valTalentNa">1</div></div>
+          <div class="spec-item talent-box"><div class="spec-label">🌀 원소 전투</div><div class="spec-val talent-val" id="valTalentE">1</div></div>
+          <div class="spec-item talent-box"><div class="spec-label">💥 원소 폭발</div><div class="spec-val talent-val" id="valTalentQ">1</div></div>
+        </div>
+
         <div class="spec-row"><span class="spec-label" style="width:50px;">무기</span><span class="spec-val" id="valWeapon">-</span></div>
         <div class="spec-row"><span class="spec-label" style="width:50px;">성유물</span><span class="spec-val" id="valArtifact">-</span></div>
         
@@ -247,11 +258,11 @@
 
   <script>
     const defaultData = [
-      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
-      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
+      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", talentNa: "1", talentE: "9", talentQ: "9", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
+      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", talentNa: "1", talentE: "8", talentQ: "8", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
     ];
 
-    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v9_data")) || defaultData;
+    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v10_data")) || defaultData;
     const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -259,9 +270,8 @@
 
     let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
 
-    function saveData() { localStorage.setItem("genshin_roulette_v9_data", JSON.stringify(charData)); }
+    function saveData() { localStorage.setItem("genshin_roulette_v10_data", JSON.stringify(charData)); }
     
-    // ON(enabled) 상태이면서 종결(level 2)이 아닌 캐릭터만 룰렛 대상으로 선택
     function getActiveChars() { 
       return charData.filter(c => c.enabled !== false && c.level < 2); 
     }
@@ -344,6 +354,10 @@
           statusEl.className = "char-status-badge badge-final";
         }
 
+        document.getElementById("valTalentNa").innerText = selected.talentNa || "1";
+        document.getElementById("valTalentE").innerText = selected.talentE || "1";
+        document.getElementById("valTalentQ").innerText = selected.talentQ || "1";
+
         document.getElementById("valWeapon").innerText = selected.weapon || "-";
         document.getElementById("valArtifact").innerText = selected.artifact || "-";
         document.getElementById("valAtk").innerText = selected.atk || "-";
@@ -378,7 +392,6 @@
       const listContainer = document.getElementById("charCardList");
       listContainer.innerHTML = "";
 
-      // ON 상태인 캐릭터만 도감에 표시
       const visibleChars = charData.filter(c => c.enabled !== false);
 
       if (visibleChars.length === 0) {
@@ -416,7 +429,7 @@
     function addCharacter() {
       const name = document.getElementById("newCharName").value.trim();
       if (!name) return;
-      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
+      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", talentNa: "1", talentE: "1", talentQ: "1", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
       document.getElementById("newCharName").value = ""; renderSettingList();
     }
     function deleteChar(idx) { charData.splice(idx, 1); renderSettingList(); }
@@ -424,7 +437,7 @@
     function renderSettingList() {
       const container = document.getElementById("settingList"); container.innerHTML = "";
       charData.forEach((c, i) => {
-        if (c.enabled === undefined) c.enabled = true; // 기본값 예외 처리
+        if (c.enabled === undefined) c.enabled = true;
 
         const item = document.createElement("div"); item.className = "setting-item";
         item.innerHTML = `
@@ -450,6 +463,12 @@
             </select>
             <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
           </div>
+          <!-- 특성 레벨 설정 입력란 (무기 위) -->
+          <div style="display:flex; gap:4px;">
+            <input type="text" placeholder="평타 (예: 1)" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
+            <input type="text" placeholder="스킬 (예: 8)" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
+            <input type="text" placeholder="궁극기 (예: 8)" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
+          </div>
           <div style="display:flex; gap:4px;">
             <input type="text" placeholder="무기" value="${c.weapon||''}" onchange="charData[${i}].weapon=this.value">
             <input type="text" placeholder="성유물" value="${c.artifact||''}" onchange="charData[${i}].artifact=this.value">
@@ -466,7 +485,7 @@
             <input type="text" placeholder="원충" value="${c.er||''}" onchange="charData[${i}].er=this.value">
           </div>
           <div>
-            <textarea placeholder="📌 참고 메모 (예: 페보 보유 시 원충 요구량 감소, 파티 조합 등)" onchange="charData[${i}].memo=this.value">${c.memo||''}</textarea>
+            <textarea placeholder="📌 참고 메모" onchange="charData[${i}].memo=this.value">${c.memo||''}</textarea>
           </div>
         `;
         container.appendChild(item);
