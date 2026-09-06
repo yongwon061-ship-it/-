@@ -79,7 +79,7 @@
     .badge-semi { background: rgba(243, 156, 18, 0.2); color: #F39C12; border: 1px solid #F39C12; }
     .badge-final { background: rgba(231, 76, 60, 0.2); color: #E74C3C; border: 1px solid #E74C3C; }
 
-    /* 🟢 원신 스타일 동그라미 특성 아이콘 디자인 */
+    /* 🟢 원신 스타일 동그라미 특성 아이콘 디자인 (이미지 지원) */
     .talent-container {
       display: flex; justify-content: center; gap: 24px;
       width: 100%; margin-bottom: 10px; padding: 8px 0;
@@ -88,16 +88,20 @@
       display: flex; flex-direction: column; align-items: center; position: relative;
     }
     .talent-icon-circle {
-      width: 48px; height: 48px; border-radius: 50%;
+      width: 50px; height: 50px; border-radius: 50%;
       background: radial-gradient(circle, #3A3D5D 0%, #1A1B29 100%);
-      border: 2px solid #F1C40F;
+      border: 2px solid #F1C40F; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
       font-size: 20px; box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+    }
+    .talent-icon-circle img {
+      width: 100%; height: 100%; object-fit: cover;
     }
     .talent-lvl-badge {
       position: absolute; bottom: -6px; background: #282B42;
       border: 1px solid #F1C40F; border-radius: 10px;
       padding: 1px 6px; font-size: 10px; font-weight: bold; color: #FFF;
+      z-index: 2;
     }
 
     /* 하단 스펙 그리드 레이아웃 */
@@ -171,6 +175,9 @@
 
     .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .setting-item { background: #282B42; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .talent-input-group { display: flex; flex-direction: column; gap: 4px; background: #1A1C2B; padding: 8px; border-radius: 8px; }
+    .talent-input-row { display: flex; gap: 4px; }
+    
     input[type="text"], select, textarea { background: #141522; color: #FFF; border: 1px solid #3F4468; padding: 8px; border-radius: 6px; font-size: 12px; width: 100%; }
     textarea { resize: vertical; min-height: 40px; font-family: inherit; }
   </style>
@@ -209,18 +216,18 @@
       <!-- 실제 스펙 영역 -->
       <div id="specContainer" class="spec-grid">
         
-        <!-- 🟢 무기 바로 위 원형 특성 아이콘 3개 -->
+        <!-- 🟢 무기 바로 위 원형 특성 아이콘 3개 (이미지 적용) -->
         <div class="talent-container">
           <div class="talent-circle-item">
-            <div class="talent-icon-circle">⚔️</div>
+            <div class="talent-icon-circle" id="boxTalentNa">⚔️</div>
             <div class="talent-lvl-badge" id="valTalentNa">1</div>
           </div>
           <div class="talent-circle-item">
-            <div class="talent-icon-circle">🌀</div>
+            <div class="talent-icon-circle" id="boxTalentE">🌀</div>
             <div class="talent-lvl-badge" id="valTalentE">1</div>
           </div>
           <div class="talent-circle-item">
-            <div class="talent-icon-circle">💥</div>
+            <div class="talent-icon-circle" id="boxTalentQ">💥</div>
             <div class="talent-lvl-badge" id="valTalentQ">1</div>
           </div>
         </div>
@@ -281,11 +288,11 @@
 
   <script>
     const defaultData = [
-      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", talentNa: "1", talentE: "9", talentQ: "9", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
-      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", talentNa: "1", talentE: "8", talentQ: "8", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
+      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", talentNa: "1", talentE: "9", talentQ: "9", imgNa: "", imgE: "", imgQ: "", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
+      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", talentNa: "1", talentE: "8", talentQ: "8", imgNa: "", imgE: "", imgQ: "", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
     ];
 
-    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v11_data")) || defaultData;
+    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v12_data")) || defaultData;
     const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -293,7 +300,7 @@
 
     let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
 
-    function saveData() { localStorage.setItem("genshin_roulette_v11_data", JSON.stringify(charData)); }
+    function saveData() { localStorage.setItem("genshin_roulette_v12_data", JSON.stringify(charData)); }
     
     function getActiveChars() { 
       return charData.filter(c => c.enabled !== false && c.level < 2); 
@@ -350,6 +357,15 @@
       saveData(); draw();
     }
 
+    function setTalentBox(elementId, imgUrl, defaultEmoji) {
+      const box = document.getElementById(elementId);
+      if (imgUrl && imgUrl.trim() !== "") {
+        box.innerHTML = `<img src="${imgUrl}">`;
+      } else {
+        box.innerText = defaultEmoji;
+      }
+    }
+
     function showCharDetail(selected) {
       document.getElementById("resultName").innerText = selected.name;
       const statusEl = document.getElementById("resultStatus");
@@ -376,6 +392,11 @@
           statusEl.innerText = "🔴 종결 완료!";
           statusEl.className = "char-status-badge badge-final";
         }
+
+        /* 특성 이미지 & 레벨 출력 */
+        setTalentBox("boxTalentNa", selected.imgNa, "⚔️");
+        setTalentBox("boxTalentE", selected.imgE, "🌀");
+        setTalentBox("boxTalentQ", selected.imgQ, "💥");
 
         document.getElementById("valTalentNa").innerText = selected.talentNa || "1";
         document.getElementById("valTalentE").innerText = selected.talentE || "1";
@@ -452,7 +473,7 @@
     function addCharacter() {
       const name = document.getElementById("newCharName").value.trim();
       if (!name) return;
-      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", talentNa: "1", talentE: "1", talentQ: "1", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
+      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", talentNa: "1", talentE: "1", talentQ: "1", imgNa: "", imgE: "", imgQ: "", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
       document.getElementById("newCharName").value = ""; renderSettingList();
     }
     function deleteChar(idx) { charData.splice(idx, 1); renderSettingList(); }
@@ -486,11 +507,24 @@
             </select>
             <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
           </div>
-          <div style="display:flex; gap:4px;">
-            <input type="text" placeholder="평타 (예: 1)" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
-            <input type="text" placeholder="스킬 (예: 8)" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
-            <input type="text" placeholder="궁극기 (예: 8)" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
+
+          <!-- 특성 이미지 URL & 레벨 설정 -->
+          <div class="talent-input-group">
+            <span style="font-size:11px; color:#F1C40F; font-weight:bold;">✨ 특성 이미지 URL & 레벨</span>
+            <div class="talent-input-row">
+              <input type="text" placeholder="평타 이미지 URL" value="${c.imgNa||''}" onchange="charData[${i}].imgNa=this.value">
+              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
+            </div>
+            <div class="talent-input-row">
+              <input type="text" placeholder="E스킬 이미지 URL" value="${c.imgE||''}" onchange="charData[${i}].imgE=this.value">
+              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
+            </div>
+            <div class="talent-input-row">
+              <input type="text" placeholder="Q스킬 이미지 URL" value="${c.imgQ||''}" onchange="charData[${i}].imgQ=this.value">
+              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
+            </div>
           </div>
+
           <div style="display:flex; gap:4px;">
             <input type="text" placeholder="무기" value="${c.weapon||''}" onchange="charData[${i}].weapon=this.value">
             <input type="text" placeholder="성유물" value="${c.artifact||''}" onchange="charData[${i}].artifact=this.value">
