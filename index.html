@@ -1,498 +1,595 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>원신 육성 룰렛</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
-      font-family: 'Segoe UI', -apple-system, sans-serif;
-      background: #12131C; color: #FFF;
-      display: flex; flex-direction: column; align-items: center;
-      min-height: 100vh; padding: 20px 10px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원신 캐릭터 스펙 카드 생성기</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas for export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0f141d;
+            color: #ece5d8;
+        }
 
-    h1 { font-size: 1.5rem; margin-bottom: 15px; color: #F1C40F; text-align: center; }
+        /* Element Themes */
+        .theme-pyro { --elem-color: #ff5034; --elem-glow: rgba(255, 80, 52, 0.4); --elem-bg: #2d1616; }
+        .theme-hydro { --elem-color: #00beff; --elem-glow: rgba(0, 190, 255, 0.4); --elem-bg: #102636; }
+        .theme-anemo { --elem-color: #33e7b8; --elem-glow: rgba(51, 231, 184, 0.4); --elem-bg: #102d28; }
+        .theme-electro { --elem-color: #cc80ff; --elem-glow: rgba(204, 128, 255, 0.4); --elem-bg: #281636; }
+        .theme-dendro { --elem-color: #a5e032; --elem-glow: rgba(165, 224, 50, 0.4); --elem-bg: #1e2e12; }
+        .theme-cryo { --elem-color: #98e8ff; --elem-glow: rgba(152, 232, 255, 0.4); --elem-bg: #142834; }
+        .theme-geo { --elem-color: #ffe058; --elem-glow: rgba(255, 224, 88, 0.4); --elem-bg: #302a14; }
 
-    /* 룰렛 */
-    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
-    @media (min-width: 480px) { .roulette-wrapper { width: 380px; height: 380px; } }
-    #canvas { width: 100%; height: 100%; background: #1A1C29; border-radius: 50%; border: 4px solid #2C2F48; }
+        /* Genshin Glass Card */
+        .genshin-card {
+            background: linear-gradient(135deg, rgba(32, 38, 52, 0.95) 0%, rgba(18, 23, 34, 0.98) 100%);
+            border: 1px solid rgba(211, 188, 142, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(211, 188, 142, 0.08);
+        }
 
-    /* 버튼 컨트롤 영역 */
-    .controls { display: flex; gap: 8px; margin-top: 20px; width: 100%; max-width: 380px; }
-    .btn {
-      flex: 1; padding: 14px 0; font-size: 15px; cursor: pointer; border: none;
-      border-radius: 12px; font-weight: bold; transition: 0.2s;
-    }
-    .btn-spin { background: linear-gradient(135deg, #FF4B2B, #FF416C); color: #FFF; flex: 1.2; }
-    .btn-spin:disabled { background: #4A4D68; color: #888; cursor: not-allowed; }
-    .btn-list { background: linear-gradient(135deg, #2193b0, #6dd5ed); color: #FFF; }
-    .btn-setting { background: linear-gradient(135deg, #4A00E0, #8E2DE2); color: #FFF; }
+        /* Skill Circle Button Styling */
+        .skill-circle-container {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    /* 모달 공통 */
-    .modal-backdrop {
-      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
-      justify-content: center; align-items: center; z-index: 1000; padding: 15px;
-    }
+        .skill-circle {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(50, 58, 75, 0.9) 0%, rgba(20, 26, 38, 0.95) 100%);
+            border: 2px solid #d3bc8e;
+            box-shadow: 0 0 12px var(--elem-glow), inset 0 0 8px rgba(211, 188, 142, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
 
-    /* 🎯 결과 카드 모달 & 도감 상세 모달 */
-    .result-card {
-      position: relative; background: #1E2030; border: 2px solid #F1C40F;
-      border-radius: 20px; width: 100%; max-width: 420px; padding: 20px;
-      box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
-      display: flex; flex-direction: column; align-items: center;
-      animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .skill-circle::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1px dashed var(--elem-color);
+            opacity: 0.6;
+            animation: spin 20s linear infinite;
+        }
 
-    .close-btn {
-      position: absolute; top: 12px; right: 15px; width: 32px; height: 32px;
-      border-radius: 50%; background: rgba(255,255,255,0.1); border: none;
-      color: #AAA; font-size: 20px; cursor: pointer; z-index: 10;
-    }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
-    /* 상단 비주얼 영역 */
-    .char-avatar-frame {
-      width: 100px; height: 100px; border-radius: 50%;
-      background: #2A2D45; border: 4px solid #777;
-      overflow: hidden; display: flex; align-items: center; justify-content: center;
-      margin-top: 5px; margin-bottom: 8px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    }
-    .char-avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
+        .skill-circle:hover {
+            transform: scale(1.06);
+            border-color: #ffe7b2;
+            box-shadow: 0 0 20px var(--elem-glow), inset 0 0 12px var(--elem-color);
+        }
 
-    /* 원소별 테두리 색상 */
-    .elem-pyro { border-color: #FF4D4D !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.4); }
-    .elem-hydro { border-color: #3399FF !important; box-shadow: 0 0 15px rgba(51, 153, 255, 0.4); }
-    .elem-anemo { border-color: #2ECC71 !important; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
-    .elem-electro { border-color: #A64DFF !important; box-shadow: 0 0 15px rgba(166, 77, 255, 0.4); }
-    .elem-dendro { border-color: #7ACC29 !important; box-shadow: 0 0 15px rgba(122, 204, 41, 0.4); }
-    .elem-cryo { border-color: #80E5FF !important; box-shadow: 0 0 15px rgba(128, 229, 255, 0.4); }
-    .elem-geo { border-color: #F1C40F !important; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+        .skill-circle.c-boosted {
+            border-color: #00ffea;
+            box-shadow: 0 0 15px rgba(0, 255, 234, 0.6);
+        }
 
-    .char-name-title { font-size: 20px; font-weight: bold; color: #FFF; margin-bottom: 4px; }
-    .char-status-badge { font-size: 13px; font-weight: bold; padding: 3px 10px; border-radius: 12px; margin-bottom: 15px; }
-    .badge-none { background: rgba(149, 165, 166, 0.2); color: #95A5A6; border: 1px solid #95A5A6; }
-    .badge-semi { background: rgba(243, 156, 18, 0.2); color: #F39C12; border: 1px solid #F39C12; }
-    .badge-final { background: rgba(231, 76, 60, 0.2); color: #E74C3C; border: 1px solid #E74C3C; }
+        /* Talent Level Badge */
+        .skill-level-badge {
+            position: absolute;
+            bottom: -8px;
+            background: linear-gradient(180deg, #3d4659 0%, #1c2230 100%);
+            border: 1px solid #d3bc8e;
+            color: #ece5d8;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
 
-    /* 하단 스펙 그리드 레이아웃 */
-    .spec-grid { width: 100%; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
-    .spec-row { background: #141522; padding: 8px 12px; border-radius: 8px; border: 1px solid #2C2F48; display: flex; align-items: center; }
-    .spec-row-multi { display: grid; gap: 8px; }
-    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-    .grid-2 { grid-template-columns: 1fr 1fr; }
-    
-    .spec-item { background: #141522; padding: 8px 10px; border-radius: 8px; border: 1px solid #2C2F48; text-align: center; }
-    .spec-label { font-size: 11px; color: #888; margin-bottom: 2px; }
-    .spec-val { font-weight: bold; color: #FFF; }
+        .skill-level-badge.c-boosted {
+            border-color: #00ffea;
+            color: #00ffea;
+        }
 
-    /* 특성 스타일 특화 */
-    .talent-box { background: rgba(241, 196, 15, 0.05); border-color: rgba(241, 196, 15, 0.3); }
-    .talent-val { color: #F1C40F; font-size: 14px; }
+        /* Star Rating */
+        .star-gold {
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.6);
+        }
 
-    /* 메모 박스 */
-    .spec-memo-box {
-      background: #141522; border: 1px dashed #3F4468; border-radius: 8px;
-      padding: 10px 12px; font-size: 12px; color: #DDD; line-height: 1.4;
-      white-space: pre-wrap; word-break: break-word; text-align: left;
-    }
-
-    /* 잠김 안내 상자 */
-    .locked-box {
-      background: #141522; border: 1px dashed #E74C3C; border-radius: 12px;
-      padding: 25px 15px; text-align: center; color: #888; font-size: 13px; line-height: 1.6;
-      width: 100%; margin-top: 10px;
-    }
-
-    /* 📋 목록 모달 스타일 */
-    .list-modal-card {
-      background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px;
-      max-height: 80vh; padding: 20px; display: flex; flex-direction: column; gap: 12px;
-      position: relative; border: 1px solid #3F4468;
-    }
-    .char-card-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
-    .char-select-card {
-      background: #282B42; border-radius: 12px; padding: 12px; display: flex;
-      align-items: center; justify-content: space-between; cursor: pointer;
-      border: 1px solid #3F4468; transition: 0.2s;
-    }
-    .char-select-card:hover { border-color: #F1C40F; background: #323652; }
-
-    /* ⚙️ 설정 모달 스타일 */
-    .setting-card { background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px; max-height: 85vh; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .setting-add-row { display: flex; gap: 8px; align-items: center; }
-    .btn-add-char {
-      background: linear-gradient(135deg, #27ae60, #2ecc71);
-      color: #FFF; border: none; border-radius: 8px;
-      padding: 10px 20px; font-size: 14px; font-weight: bold;
-      cursor: pointer; white-space: nowrap; transition: 0.2s;
-    }
-    .btn-add-char:hover { opacity: 0.9; }
-
-    .btn-del-char {
-      background: rgba(231, 76, 60, 0.15);
-      color: #E74C3C; border: 1px solid #E74C3C;
-      border-radius: 6px; padding: 2px 8px; font-size: 11px;
-      cursor: pointer; transition: 0.2s;
-    }
-    .btn-del-char:hover { background: #E74C3C; color: #FFF; }
-
-    /* ON/OFF 스위치 토글 스타일 */
-    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #4A4D68; transition: .3s; border-radius: 22px;
-    }
-    .slider:before {
-      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
-      background-color: white; transition: .3s; border-radius: 50%;
-    }
-    input:checked + .slider { background-color: #2ECC71; }
-    input:checked + .slider:before { transform: translateX(22px); }
-
-    .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .setting-item { background: #282B42; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    input[type="text"], select, textarea { background: #141522; color: #FFF; border: 1px solid #3F4468; padding: 8px; border-radius: 6px; font-size: 12px; width: 100%; }
-    textarea { resize: vertical; min-height: 40px; font-family: inherit; }
-  </style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121722;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a4458;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d3bc8e;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen p-4 md:p-8 theme-pyro">
 
-  <h1>🗡️ 원신 육성 룰렛</h1>
-
-  <div class="roulette-wrapper">
-    <canvas id="canvas" width="400" height="400"></canvas>
-  </div>
-
-  <div class="controls">
-    <button class="btn btn-spin" id="spinBtn" onclick="spin()">🎲 돌리기</button>
-    <button class="btn btn-list" onclick="openList()">📋 목록</button>
-    <button class="btn btn-setting" onclick="openSetting()">⚙️ 설정</button>
-  </div>
-
-  <!-- 결과 & 상세 스펙 모달 -->
-  <div id="resultModal" class="modal-backdrop">
-    <div class="result-card">
-      <button class="close-btn" onclick="closeResult()">&times;</button>
-      
-      <div class="char-avatar-frame" id="resultAvatar">
-        <span style="color: #6C7293; font-size: 11px;">사진 없음</span>
-      </div>
-      <div class="char-name-title" id="resultName">캐릭터 이름</div>
-      <div class="char-status-badge" id="resultStatus">육성 단계</div>
-      
-      <!-- 잠김 안내 창 -->
-      <div id="lockedContainer" class="locked-box" style="display: none;">
-        🔒 <strong style="color:#FFF;">미해금 캐릭터</strong><br>
-        아직 룰렛에서 선택되지 않았습니다.<br>룰렛을 돌려서 캐릭터 스펙을 해금해보세요!
-      </div>
-
-      <!-- 실제 스펙 영역 -->
-      <div id="specContainer" class="spec-grid">
-        <!-- 무기 위: 특성 3열 배치 -->
-        <div class="spec-row-multi grid-3">
-          <div class="spec-item talent-box"><div class="spec-label">⚔️ 일반 공격</div><div class="spec-val talent-val" id="valTalentNa">1</div></div>
-          <div class="spec-item talent-box"><div class="spec-label">🌀 원소 전투</div><div class="spec-val talent-val" id="valTalentE">1</div></div>
-          <div class="spec-item talent-box"><div class="spec-label">💥 원소 폭발</div><div class="spec-val talent-val" id="valTalentQ">1</div></div>
-        </div>
-
-        <div class="spec-row"><span class="spec-label" style="width:50px;">무기</span><span class="spec-val" id="valWeapon">-</span></div>
-        <div class="spec-row"><span class="spec-label" style="width:50px;">성유물</span><span class="spec-val" id="valArtifact">-</span></div>
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <div class="spec-row-multi grid-3">
-          <div class="spec-item"><div class="spec-label">공격력</div><div class="spec-val" id="valAtk">-</div></div>
-          <div class="spec-item"><div class="spec-label">방어력</div><div class="spec-val" id="valDef">-</div></div>
-          <div class="spec-item"><div class="spec-label">체력</div><div class="spec-val" id="valHp">-</div></div>
-        </div>
+        <!-- Left Column: Controls & Inputs -->
+        <div class="lg:col-span-5 space-y-6 bg-slate-900/80 p-6 rounded-2xl border border-slate-700/60 backdrop-blur-md">
+            <h2 class="text-xl font-bold text-amber-200 border-b border-amber-500/30 pb-3 flex items-center justify-between">
+                <span><i class="fa-solid fa-sliders mr-2"></i>캐릭터 설정</span>
+                <span class="text-xs font-normal text-slate-400">실시간 반영됨</span>
+            </h2>
 
-        <div class="spec-row-multi grid-2">
-          <div class="spec-item"><div class="spec-label">치명타 확률</div><div class="spec-val" id="valCritRate">-</div></div>
-          <div class="spec-item"><div class="spec-label">치명타 피해</div><div class="spec-val" id="valCritDmg">-</div></div>
-        </div>
-
-        <div class="spec-row-multi grid-2">
-          <div class="spec-item"><div class="spec-label">원소 마스터리</div><div class="spec-val" id="valEm">-</div></div>
-          <div class="spec-item"><div class="spec-label">원소 충전 효율</div><div class="spec-val" id="valEr">-</div></div>
-        </div>
-
-        <div id="memoRow" class="spec-memo-box">
-          <div class="spec-label" style="margin-bottom: 4px; color: #F1C40F;">📌 참고 메모</div>
-          <div id="valMemo" style="color: #EEE;">-</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 📋 캐릭터 목록 모달 -->
-  <div id="listModal" class="modal-backdrop">
-    <div class="list-modal-card">
-      <button class="close-btn" onclick="closeList()">&times;</button>
-      <h2 style="font-size: 16px; color: #6dd5ed; margin-bottom: 5px;">📋 캐릭터 도감</h2>
-      <div class="char-card-list" id="charCardList"></div>
-    </div>
-  </div>
-
-  <!-- ⚙️ 설정 모달 -->
-  <div id="settingModal" class="modal-backdrop">
-    <div class="setting-card">
-      <button class="close-btn" onclick="closeSetting()">&times;</button>
-      <h2 style="font-size: 16px; color: #F1C40F;">⚙️ 캐릭터 세팅 및 스펙 설정</h2>
-      
-      <!-- 캐릭터 추가 영역 -->
-      <div class="setting-add-row">
-        <input type="text" id="newCharName" placeholder="새 캐릭터 이름 입력">
-        <button class="btn-add-char" onclick="addCharacter()">+ 추가</button>
-      </div>
-
-      <div class="setting-list" id="settingList"></div>
-      <div style="text-align: right; margin-top: 5px;">
-        <button class="btn btn-setting" style="padding: 10px 20px; font-size: 13px;" onclick="closeSetting()">저장 및 완료</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const defaultData = [
-      { name: "종려", enabled: true, level: 0, element: "geo", photoUrl: "", talentNa: "1", talentE: "9", talentQ: "9", weapon: "페보니우스 장창", artifact: "반암4", atk: "-", def: "-", hp: "50,000", critRate: "-", critDmg: "-", em: "-", er: "-", memo: "페보창 없으면 어획으로 변경 (원충 180% 챙기기)" },
-      { name: "카즈하", enabled: true, level: 0, element: "anemo", photoUrl: "", talentNa: "1", talentE: "8", talentQ: "8", weapon: "강철의 벌침", artifact: "청록4", atk: "-", def: "-", hp: "-", critRate: "-", critDmg: "-", em: "900", er: "160%", memo: "서포팅 전용, 원충 최소 160 이상 유지 필수" }
-    ];
-
-    let charData = JSON.parse(localStorage.getItem("genshin_roulette_v10_data")) || defaultData;
-    const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const spinBtn = document.getElementById("spinBtn");
-
-    let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
-
-    function saveData() { localStorage.setItem("genshin_roulette_v10_data", JSON.stringify(charData)); }
-    
-    function getActiveChars() { 
-      return charData.filter(c => c.enabled !== false && c.level < 2); 
-    }
-
-    function draw() {
-      const activeChars = getActiveChars();
-      ctx.clearRect(0, 0, 400, 400);
-
-      if (activeChars.length === 0) {
-        ctx.fillStyle = "#FFF"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText("룰렛 대상 캐릭터가 없습니다!", 200, 200);
-        spinBtn.disabled = true; return;
-      } else { spinBtn.disabled = false; }
-
-      const arc = (2 * Math.PI) / activeChars.length;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 15px sans-serif";
-
-      for (let i = 0; i < activeChars.length; i++) {
-        const angle = startAngle + i * arc;
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.beginPath(); ctx.arc(200, 200, 185, angle, angle + arc, false); ctx.arc(200, 200, 0, angle + arc, angle, true); ctx.fill();
-
-        ctx.save(); ctx.fillStyle = "#FFF";
-        ctx.translate(200 + Math.cos(angle + arc / 2) * 125, 200 + Math.sin(angle + arc / 2) * 125);
-        ctx.rotate(angle + arc / 2 + Math.PI / 2);
-        
-        let label = activeChars[i].name;
-        if(activeChars[i].level === 1) label += "\n(준종결)";
-        ctx.fillText(label, 0, 0); ctx.restore();
-      }
-
-      ctx.fillStyle = "#FFF"; ctx.beginPath(); ctx.moveTo(188, 15); ctx.lineTo(212, 15); ctx.lineTo(200, 38); ctx.fill();
-    }
-
-    function rotate() {
-      spinTime += 30;
-      if (spinTime >= spinTimeTotal) { stopRotate(); return; }
-      startAngle += ((spinTimeTotal - spinTime) / spinTimeTotal * 20 * Math.PI / 180);
-      draw(); requestAnimationFrame(rotate);
-    }
-
-    function stopRotate() {
-      isSpinning = false;
-      const activeChars = getActiveChars();
-      const arc = (2 * Math.PI) / activeChars.length;
-      const degrees = startAngle * 180 / Math.PI + 90;
-      const index = Math.floor((360 - (degrees % 360)) / (arc * 180 / Math.PI)) % activeChars.length;
-      
-      const selected = activeChars[index];
-      selected.level += 1;
-
-      showCharDetail(selected);
-      saveData(); draw();
-    }
-
-    function showCharDetail(selected) {
-      document.getElementById("resultName").innerText = selected.name;
-      const statusEl = document.getElementById("resultStatus");
-      const lockedContainer = document.getElementById("lockedContainer");
-      const specContainer = document.getElementById("specContainer");
-
-      const avatar = document.getElementById("resultAvatar");
-      avatar.className = `char-avatar-frame elem-${selected.element || 'pyro'}`;
-      avatar.innerHTML = selected.photoUrl ? `<img src="${selected.photoUrl}">` : '<span style="color:#6C7293; font-size:11px;">사진 없음</span>';
-
-      if (selected.level === 0) {
-        statusEl.innerText = "🔒 미해금 캐릭터";
-        statusEl.className = "char-status-badge badge-none";
-        lockedContainer.style.display = "block";
-        specContainer.style.display = "none";
-      } else {
-        lockedContainer.style.display = "none";
-        specContainer.style.display = "flex";
-
-        if (selected.level === 1) {
-          statusEl.innerText = "🟠 준종결 달성 (육성중)";
-          statusEl.className = "char-status-badge badge-semi";
-        } else {
-          statusEl.innerText = "🔴 종결 완료!";
-          statusEl.className = "char-status-badge badge-final";
-        }
-
-        document.getElementById("valTalentNa").innerText = selected.talentNa || "1";
-        document.getElementById("valTalentE").innerText = selected.talentE || "1";
-        document.getElementById("valTalentQ").innerText = selected.talentQ || "1";
-
-        document.getElementById("valWeapon").innerText = selected.weapon || "-";
-        document.getElementById("valArtifact").innerText = selected.artifact || "-";
-        document.getElementById("valAtk").innerText = selected.atk || "-";
-        document.getElementById("valDef").innerText = selected.def || "-";
-        document.getElementById("valHp").innerText = selected.hp || "-";
-        document.getElementById("valCritRate").innerText = selected.critRate || "-";
-        document.getElementById("valCritDmg").innerText = selected.critDmg || "-";
-        document.getElementById("valEm").innerText = selected.em || "-";
-        document.getElementById("valEr").innerText = selected.er || "-";
-
-        const memoBox = document.getElementById("memoRow");
-        if (selected.memo && selected.memo.trim() !== "") {
-          document.getElementById("valMemo").innerText = selected.memo;
-          memoBox.style.display = "block";
-        } else {
-          memoBox.style.display = "none";
-        }
-      }
-
-      document.getElementById("resultModal").style.display = "flex";
-    }
-
-    function spin() {
-      if (isSpinning || getActiveChars().length === 0) return;
-      isSpinning = true; spinTime = 0; spinTimeTotal = Math.random() * 3000 + 4000;
-      rotate();
-    }
-
-    function closeResult() { document.getElementById("resultModal").style.display = "none"; }
-    
-    function openList() {
-      const listContainer = document.getElementById("charCardList");
-      listContainer.innerHTML = "";
-
-      const visibleChars = charData.filter(c => c.enabled !== false);
-
-      if (visibleChars.length === 0) {
-        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>활성화된 캐릭터가 없습니다.</div>";
-      } else {
-        visibleChars.forEach((c) => {
-          let badgeText = "🔒 미해금";
-          let badgeClass = "badge-none";
-          if (c.level === 1) { badgeText = "🟠 준종결"; badgeClass = "badge-semi"; }
-          else if (c.level >= 2) { badgeText = "🔴 종결 완료"; badgeClass = "badge-final"; }
-
-          const card = document.createElement("div");
-          card.className = "char-select-card";
-          card.onclick = () => { closeList(); showCharDetail(c); };
-          card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div class="char-avatar-frame elem-${c.element || 'pyro'}" style="width:40px; height:40px; margin:0; border-width:2px;">
-                ${c.photoUrl ? `<img src="${c.photoUrl}">` : '<span style="font-size:9px; color:#888;">N/A</span>'}
-              </div>
-              <strong style="font-size:14px; color:#FFF;">${c.name}</strong>
+            <!-- Element Selector -->
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-2">원소 속성 선택</label>
+                <div class="grid grid-cols-7 gap-2">
+                    <button onclick="setElement('pyro')" class="p-2 rounded-lg bg-red-950/60 border border-red-500/40 text-red-400 hover:bg-red-900/80 transition flex justify-center items-center font-bold text-xs">불</button>
+                    <button onclick="setElement('hydro')" class="p-2 rounded-lg bg-sky-950/60 border border-sky-500/40 text-sky-400 hover:bg-sky-900/80 transition flex justify-center items-center font-bold text-xs">물</button>
+                    <button onclick="setElement('anemo')" class="p-2 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/80 transition flex justify-center items-center font-bold text-xs">바람</button>
+                    <button onclick="setElement('electro')" class="p-2 rounded-lg bg-purple-950/60 border border-purple-500/40 text-purple-400 hover:bg-purple-900/80 transition flex justify-center items-center font-bold text-xs">번개</button>
+                    <button onclick="setElement('dendro')" class="p-2 rounded-lg bg-lime-950/60 border border-lime-500/40 text-lime-400 hover:bg-lime-900/80 transition flex justify-center items-center font-bold text-xs">풀</button>
+                    <button onclick="setElement('cryo')" class="p-2 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-900/80 transition flex justify-center items-center font-bold text-xs">얼음</button>
+                    <button onclick="setElement('geo')" class="p-2 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-400 hover:bg-amber-900/80 transition flex justify-center items-center font-bold text-xs">바위</button>
+                </div>
             </div>
-            <span class="char-status-badge ${badgeClass}" style="margin:0;">${badgeText}</span>
-          `;
-          listContainer.appendChild(card);
+
+            <!-- Basic Info -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">캐릭터 이름</label>
+                    <input type="text" id="inputName" value="카에데하라 카즈하" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">캐릭터 레벨</label>
+                    <input type="text" id="inputLevel" value="Lv. 90/90" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">캐릭터 일러스트 / 일러 URL 또는 업로드</label>
+                <input type="file" id="inputImageFile" accept="image/*" onchange="handleImageUpload(event)" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30 cursor-pointer">
+            </div>
+
+            <!-- Constellation Stepper -->
+            <div>
+                <label class="block text-xs text-slate-300 mb-1">운명의 자리 (돌파)</label>
+                <div class="flex gap-2">
+                    <button onclick="setConstellation(0)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">명함</button>
+                    <button onclick="setConstellation(1)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">1돌</button>
+                    <button onclick="setConstellation(2)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">2돌</button>
+                    <button onclick="setConstellation(3)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">3돌</button>
+                    <button onclick="setConstellation(4)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">4돌</button>
+                    <button onclick="setConstellation(5)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">5돌</button>
+                    <button onclick="setConstellation(6)" class="c-btn flex-1 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs">6돌</button>
+                </div>
+            </div>
+
+            <!-- Skills Section (The Requested Circle Talent Controls!) -->
+            <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-4">
+                <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex justify-between items-center">
+                    <span><i class="fa-solid fa-circle-dot mr-1"></i>특성(스킬) 레벨 조절</span>
+                    <span class="text-[10px] text-slate-400 font-normal">+ / - 버튼으로 원형 아이콘 반영</span>
+                </h3>
+
+                <!-- Normal Attack Control -->
+                <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 border border-amber-400/50 flex items-center justify-center text-amber-300 text-xs">
+                            <i class="fa-solid fa-hand-fist"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200">일반 공격</div>
+                            <div class="text-[10px] text-slate-400">아마야마 카게우치</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeTalent('normal', -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">-</button>
+                        <span id="labelNormalLvl" class="w-8 text-center text-sm font-bold text-amber-300">10</span>
+                        <button onclick="changeTalent('normal', 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">+</button>
+                    </div>
+                </div>
+
+                <!-- Elemental Skill Control -->
+                <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 border border-amber-400/50 flex items-center justify-center text-amber-300 text-xs">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200">원소 전투 (E)</div>
+                            <div class="text-[10px] text-slate-400">치하야부루</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeTalent('skill', -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">-</button>
+                        <span id="labelSkillLvl" class="w-8 text-center text-sm font-bold text-amber-300">10</span>
+                        <button onclick="changeTalent('skill', 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">+</button>
+                    </div>
+                </div>
+
+                <!-- Elemental Burst Control -->
+                <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 border border-amber-400/50 flex items-center justify-center text-amber-300 text-xs">
+                            <i class="fa-solid fa-burst"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200">원소 폭발 (Q)</div>
+                            <div class="text-[10px] text-slate-400">카즈하의 일구</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeTalent('burst', -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">-</button>
+                        <span id="labelBurstLvl" class="w-8 text-center text-sm font-bold text-amber-300">10</span>
+                        <button onclick="changeTalent('burst', 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold border border-slate-600 text-xs">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Config -->
+            <div class="space-y-3">
+                <label class="block text-xs font-bold text-slate-300">주요 스탯 설정</label>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <span class="text-slate-400">최대 HP</span>
+                        <input type="text" id="statHp" value="19,840" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">공격력</span>
+                        <input type="text" id="statAtk" value="1,420" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">방어력</span>
+                        <input type="text" id="statDef" value="845" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">원소 마스터리</span>
+                        <input type="text" id="statEm" value="985" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">치명타 확률</span>
+                        <input type="text" id="statCritRate" value="45.2%" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">치명타 피해</span>
+                        <input type="text" id="statCritDmg" value="120.4%" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">원소 충전 효율</span>
+                        <input type="text" id="statEr" value="164.8%" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                    <div>
+                        <span class="text-slate-400">원소 피해 보너스</span>
+                        <input type="text" id="statElemBonus" value="61.6%" oninput="updateCard()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Button -->
+            <button onclick="downloadCard()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> 스펙 카드 이미지 저장하기
+            </button>
+        </div>
+
+        <!-- Right Column: Live Genshin Spec Card Preview -->
+        <div class="lg:col-span-7 flex flex-col items-center justify-center">
+            
+            <!-- Target Card Container -->
+            <div id="genshinCardPreview" class="genshin-card w-full max-w-[680px] rounded-2xl p-6 relative overflow-hidden text-slate-100">
+                
+                <!-- Background Subtle Element Pattern -->
+                <div id="bgElementPattern" class="absolute -right-10 -bottom-10 opacity-10 text-[260px] pointer-events-none text-amber-400">
+                    <i class="fa-solid fa-wind"></i>
+                </div>
+
+                <!-- Top Header: Name, Stars, Level -->
+                <div class="flex justify-between items-start mb-4 border-b border-amber-500/20 pb-4 relative z-10">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 id="cardName" class="text-2xl font-black text-amber-100 tracking-wide">카에데하라 카즈하</h1>
+                            <span id="cardConstellationBadge" class="bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs px-2 py-0.5 rounded font-bold">C2</span>
+                        </div>
+                        <!-- Stars -->
+                        <div class="flex gap-1 text-xs mt-1 star-gold">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span id="cardLevel" class="text-sm font-extrabold text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">Lv. 90/90</span>
+                    </div>
+                </div>
+
+                <!-- Main Section: Left Character Avatar + Right Stats & Circular Skill Badges -->
+                <div class="grid grid-cols-12 gap-6 relative z-10">
+                    
+                    <!-- Character Illustration Column -->
+                    <div class="col-span-5 flex flex-col items-center">
+                        <div class="w-full h-72 rounded-xl overflow-hidden border border-amber-400/30 bg-gradient-to-b from-slate-800/50 to-slate-950/80 relative shadow-inner">
+                            <img id="cardImage" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80" class="w-full h-full object-cover object-top" alt="Character">
+                            
+                            <!-- Element Badge Overlay -->
+                            <div id="cardElemIcon" class="absolute top-2 left-2 w-9 h-9 rounded-full bg-slate-900/90 border border-amber-400/60 flex items-center justify-center text-amber-300 shadow-md">
+                                <i class="fa-solid fa-wind text-base"></i>
+                            </div>
+                        </div>
+
+                        <!-- Weapon Info Card Mini -->
+                        <div class="w-full mt-3 bg-slate-900/80 border border-slate-700/80 rounded-lg p-2.5 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded bg-slate-800 border border-amber-400/40 flex items-center justify-center text-amber-300 text-lg">
+                                <i class="fa-solid fa-khanda"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-slate-200 truncate">서풍의 검</div>
+                                <div class="text-[10px] text-amber-400 font-semibold">재련 5단계 • Lv.90</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats & SKILLS Column -->
+                    <div class="col-span-7 space-y-4">
+                        
+                        <!-- CIRCULAR SKILL TALENT ICONS (REQUESTED FEATURE) -->
+                        <div class="bg-slate-900/70 border border-amber-500/20 rounded-xl p-3">
+                            <div class="text-[11px] font-bold text-amber-200/80 mb-3 flex items-center justify-between">
+                                <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>특성 육성 상태</span>
+                                <span class="text-[9px] text-slate-400">원신 시그니처 UI</span>
+                            </div>
+                            
+                            <div class="flex justify-around items-center pt-1 pb-2">
+                                
+                                <!-- Normal Attack Circle Icon -->
+                                <div class="skill-circle-container">
+                                    <div class="skill-circle">
+                                        <i class="fa-solid fa-hand-fist text-2xl text-slate-200"></i>
+                                        <div id="badgeNormalLvl" class="skill-level-badge">
+                                            <span>Lv.10</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-slate-300 mt-3 font-medium">일반 공격</span>
+                                </div>
+
+                                <!-- Elemental Skill Circle Icon -->
+                                <div class="skill-circle-container">
+                                    <div id="circleSkill" class="skill-circle">
+                                        <i id="iconSkill" class="fa-solid fa-wind text-2xl text-slate-200"></i>
+                                        <div id="badgeSkillLvl" class="skill-level-badge">
+                                            <span>Lv.10</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-slate-300 mt-3 font-medium">원소 전투</span>
+                                </div>
+
+                                <!-- Elemental Burst Circle Icon -->
+                                <div class="skill-circle-container">
+                                    <div id="circleBurst" class="skill-circle">
+                                        <i id="iconBurst" class="fa-solid fa-burst text-2xl text-slate-200"></i>
+                                        <div id="badgeBurstLvl" class="skill-level-badge">
+                                            <span>Lv.10</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-slate-300 mt-3 font-medium">원소 폭발</span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Stats Table -->
+                        <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3 space-y-1.5 text-xs">
+                            <div class="flex justify-between py-0.5 border-b border-slate-800/80">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-heart text-red-400 text-[10px]"></i>최대 HP</span>
+                                <span id="displayHp" class="font-bold text-slate-200">19,840</span>
+                            </div>
+                            <div class="flex justify-between py-0.5 border-b border-slate-800/80">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-shield text-blue-400 text-[10px]"></i>공격력 / 방어력</span>
+                                <span class="font-bold text-slate-200"><span id="displayAtk">1,420</span> / <span id="displayDef">845</span></span>
+                            </div>
+                            <div class="flex justify-between py-0.5 border-b border-slate-800/80">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-gem text-emerald-400 text-[10px]"></i>원소 마스터리</span>
+                                <span id="displayEm" class="font-bold text-amber-300">985</span>
+                            </div>
+                            <div class="flex justify-between py-0.5 border-b border-slate-800/80">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-amber-400 text-[10px]"></i>치명타 확률 / 피해</span>
+                                <span class="font-bold text-slate-200"><span id="displayCritRate">45.2%</span> / <span id="displayCritDmg">120.4%</span></span>
+                            </div>
+                            <div class="flex justify-between py-0.5 border-b border-slate-800/80">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-purple-400 text-[10px]"></i>원소 충전 효율</span>
+                                <span id="displayEr" class="font-bold text-slate-200">164.8%</span>
+                            </div>
+                            <div class="flex justify-between py-0.5">
+                                <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-fire-flame-curved text-orange-400 text-[10px]"></i>원소 피해 보너스</span>
+                                <span id="displayElemBonus" class="font-bold text-amber-300">61.6%</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Footer Set Bonus Info -->
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-slate-300 font-semibold">청록색 그림자 4세트</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500">Genshin Impact Spec Card</div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        // State
+        let currentElement = 'anemo';
+        let constellation = 2;
+        let talents = {
+            normal: 10,
+            skill: 10,
+            burst: 10
+        };
+
+        const elementIcons = {
+            pyro: 'fa-fire',
+            hydro: 'fa-droplet',
+            anemo: 'fa-wind',
+            electro: 'fa-bolt',
+            dendro: 'fa-leaf',
+            cryo: 'fa-snowflake',
+            geo: 'fa-mountain'
+        };
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            setElement('anemo');
+            updateCard();
         });
-      }
 
-      document.getElementById("listModal").style.display = "flex";
-    }
-    function closeList() { document.getElementById("listModal").style.display = "none"; }
+        // Set Element
+        function setElement(elem) {
+            currentElement = elem;
+            document.body.className = `min-h-screen p-4 md:p-8 theme-${elem}`;
+            
+            // Icon Updates
+            const iconClass = elementIcons[elem] || 'fa-wind';
+            document.getElementById('cardElemIcon').innerHTML = `<i class="fa-solid ${iconClass} text-base"></i>`;
+            document.getElementById('bgElementPattern').innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+            document.getElementById('iconSkill').className = `fa-solid ${iconClass} text-2xl text-slate-200`;
+            
+            updateCard();
+        }
 
-    function openSetting() { renderSettingList(); document.getElementById("settingModal").style.display = "flex"; }
-    function closeSetting() { document.getElementById("settingModal").style.display = "none"; saveData(); draw(); }
+        // Set Constellation
+        function setConstellation(c) {
+            constellation = c;
+            const badge = document.getElementById('cardConstellationBadge');
+            badge.innerText = `C${c}`;
+            if (c === 0) {
+                badge.innerText = '명함';
+            }
+            updateTalentDisplay();
+        }
 
-    function addCharacter() {
-      const name = document.getElementById("newCharName").value.trim();
-      if (!name) return;
-      charData.push({ name: name, enabled: true, level: 0, element: "pyro", photoUrl: "", talentNa: "1", talentE: "1", talentQ: "1", weapon: "", artifact: "", atk: "", def: "", hp: "", critRate: "", critDmg: "", em: "", er: "", memo: "" });
-      document.getElementById("newCharName").value = ""; renderSettingList();
-    }
-    function deleteChar(idx) { charData.splice(idx, 1); renderSettingList(); }
+        // Change Talent Levels
+        function changeTalent(type, delta) {
+            let maxLvl = 10;
+            // Boost max levels with C3 / C5
+            if ((type === 'skill' && constellation >= 3) || (type === 'burst' && constellation >= 5)) {
+                maxLvl = 13;
+            }
 
-    function renderSettingList() {
-      const container = document.getElementById("settingList"); container.innerHTML = "";
-      charData.forEach((c, i) => {
-        if (c.enabled === undefined) c.enabled = true;
+            talents[type] = Math.max(1, Math.min(maxLvl, talents[type] + delta));
+            updateTalentDisplay();
+        }
 
-        const item = document.createElement("div"); item.className = "setting-item";
-        item.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <label class="switch">
-                <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="charData[${i}].enabled = this.checked">
-                <span class="slider"></span>
-              </label>
-              <strong style="color:#F1C40F; font-size:14px;">${c.name}</strong>
-            </div>
-            <button class="btn-del-char" onclick="deleteChar(${i})">삭제</button>
-          </div>
-          <div style="display:flex; gap:6px;">
-            <select onchange="charData[${i}].element=this.value">
-              <option value="pyro" ${c.element==='pyro'?'selected':''}> 불</option>
-              <option value="hydro" ${c.element==='hydro'?'selected':''}> 물</option>
-              <option value="anemo" ${c.element==='anemo'?'selected':''}> 바람</option>
-              <option value="electro" ${c.element==='electro'?'selected':''}> 번개</option>
-              <option value="dendro" ${c.element==='dendro'?'selected':''}> 풀</option>
-              <option value="cryo" ${c.element==='cryo'?'selected':''}> 얼음</option>
-              <option value="geo" ${c.element==='geo'?'selected':''}> 바위</option>
-            </select>
-            <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
-          </div>
-          <!-- 특성 레벨 설정 입력란 (무기 위) -->
-          <div style="display:flex; gap:4px;">
-            <input type="text" placeholder="평타 (예: 1)" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
-            <input type="text" placeholder="스킬 (예: 8)" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
-            <input type="text" placeholder="궁극기 (예: 8)" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
-          </div>
-          <div style="display:flex; gap:4px;">
-            <input type="text" placeholder="무기" value="${c.weapon||''}" onchange="charData[${i}].weapon=this.value">
-            <input type="text" placeholder="성유물" value="${c.artifact||''}" onchange="charData[${i}].artifact=this.value">
-          </div>
-          <div style="display:flex; gap:4px;">
-            <input type="text" placeholder="공격력" value="${c.atk||''}" onchange="charData[${i}].atk=this.value">
-            <input type="text" placeholder="방어력" value="${c.def||''}" onchange="charData[${i}].def=this.value">
-            <input type="text" placeholder="체력" value="${c.hp||''}" onchange="charData[${i}].hp=this.value">
-          </div>
-          <div style="display:flex; gap:4px;">
-            <input type="text" placeholder="치확" value="${c.critRate||''}" onchange="charData[${i}].critRate=this.value">
-            <input type="text" placeholder="치피" value="${c.critDmg||''}" onchange="charData[${i}].critDmg=this.value">
-            <input type="text" placeholder="원마" value="${c.em||''}" onchange="charData[${i}].em=this.value">
-            <input type="text" placeholder="원충" value="${c.er||''}" onchange="charData[${i}].er=this.value">
-          </div>
-          <div>
-            <textarea placeholder="📌 참고 메모" onchange="charData[${i}].memo=this.value">${c.memo||''}</textarea>
-          </div>
-        `;
-        container.appendChild(item);
-      });
-    }
+        // Update Talent Circles
+        function updateTalentDisplay() {
+            // Check Constellation Boosts
+            const isSkillBoosted = constellation >= 3;
+            const isBurstBoosted = constellation >= 5;
 
-    draw();
-  </script>
+            // Labels in controls
+            document.getElementById('labelNormalLvl').innerText = talents.normal;
+            document.getElementById('labelSkillLvl').innerText = talents.skill;
+            document.getElementById('labelBurstLvl').innerText = talents.burst;
+
+            // Circle Badges on Card
+            renderSkillBadge('badgeNormalLvl', talents.normal, false);
+            renderSkillBadge('badgeSkillLvl', talents.skill, isSkillBoosted, 'circleSkill');
+            renderSkillBadge('badgeBurstLvl', talents.burst, isBurstBoosted, 'circleBurst');
+        }
+
+        function renderSkillBadge(badgeId, level, isBoosted, circleId) {
+            const badgeEl = document.getElementById(badgeId);
+            let crownHTML = level >= 10 ? '<i class="fa-solid fa-crown text-[9px] text-amber-300 mr-0.5"></i>' : '';
+            
+            badgeEl.innerHTML = `${crownHTML}<span>Lv.${level}</span>`;
+
+            if (isBoosted) {
+                badgeEl.classList.add('c-boosted');
+            } else {
+                badgeEl.classList.remove('c-boosted');
+            }
+
+            if (circleId) {
+                const circleEl = document.getElementById(circleId);
+                if (isBoosted) {
+                    circleEl.classList.add('c-boosted');
+                } else {
+                    circleEl.classList.remove('c-boosted');
+                }
+            }
+        }
+
+        // Handle Image File Upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('cardImage').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Update Text & Stats
+        function updateCard() {
+            document.getElementById('cardName').innerText = document.getElementById('inputName').value || '캐릭터 이름';
+            document.getElementById('cardLevel').innerText = document.getElementById('inputLevel').value || 'Lv. 90/90';
+
+            document.getElementById('displayHp').innerText = document.getElementById('statHp').value;
+            document.getElementById('displayAtk').innerText = document.getElementById('statAtk').value;
+            document.getElementById('displayDef').innerText = document.getElementById('statDef').value;
+            document.getElementById('displayEm').innerText = document.getElementById('statEm').value;
+            document.getElementById('displayCritRate').innerText = document.getElementById('statCritRate').value;
+            document.getElementById('displayCritDmg').innerText = document.getElementById('statCritDmg').value;
+            document.getElementById('displayEr').innerText = document.getElementById('statEr').value;
+            document.getElementById('displayElemBonus').innerText = document.getElementById('statElemBonus').value;
+
+            updateTalentDisplay();
+        }
+
+        // Export Card to Image
+        function downloadCard() {
+            const cardEl = document.getElementById('genshinCardPreview');
+            html2canvas(cardEl, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${document.getElementById('inputName').value || 'Genshin'}_스펙카드.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
 </body>
 </html>
