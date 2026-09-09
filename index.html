@@ -15,10 +15,88 @@
 
     h1 { font-size: 1.5rem; margin-bottom: 15px; color: #F1C40F; text-align: center; }
 
-    /* 룰렛 */
-    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
-    @media (min-width: 480px) { .roulette-wrapper { width: 380px; height: 380px; } }
-    #canvas { width: 100%; height: 100%; background: #1A1C29; border-radius: 50%; border: 4px solid #2C2F48; }
+    /* 🎰 슬롯머신 컨테이너 */
+    .slot-wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 10px auto;
+      border: 4px solid #F1C40F;
+      border-radius: 20px;
+      background: #1A1C29;
+      overflow: hidden;
+      box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
+    }
+    @media (min-width: 480px) { 
+      .slot-wrapper { width: 340px; height: 340px; } 
+    }
+
+    .slot-window {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slot-reel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+
+    .slot-item {
+      width: 100%;
+      height: 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      padding: 10px;
+    }
+    @media (min-width: 480px) { 
+      .slot-item { height: 340px; } 
+    }
+
+    /* 슬롯 내부 초상화 */
+    .slot-avatar {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #2A2D45;
+      border: 4px solid #777;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .slot-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .slot-char-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #FFF;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* Center Indicator Arrow */
+    .slot-pointer-left, .slot-pointer-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      color: #F1C40F;
+      z-index: 10;
+      text-shadow: 0 0 8px rgba(241, 196, 15, 0.8);
+    }
+    .slot-pointer-left { left: 8px; }
+    .slot-pointer-right { right: 8px; }
 
     /* 버튼 컨트롤 영역 */
     .controls { display: flex; gap: 8px; margin-top: 20px; width: 100%; max-width: 380px; }
@@ -79,7 +157,7 @@
     .badge-semi { background: rgba(243, 156, 18, 0.2); color: #F39C12; border: 1px solid #F39C12; }
     .badge-final { background: rgba(231, 76, 60, 0.2); color: #E74C3C; border: 1px solid #E74C3C; }
 
-    /* 🟢 원신 스타일 동그라미 특성 아이콘 디자인 (이미지 지원) */
+    /* 원신 스타일 동그라미 특성 아이콘 디자인 */
     .talent-container {
       display: flex; justify-content: center; gap: 24px;
       width: 100%; margin-bottom: 10px; padding: 8px 0;
@@ -184,10 +262,17 @@
 </head>
 <body>
 
-  <h1> 원신 육성 룰렛</h1>
+  <h1>🎰 원신 육성 슬롯 룰렛</h1>
 
-  <div class="roulette-wrapper">
-    <canvas id="canvas" width="400" height="400"></canvas>
+  <!-- 슬롯머신 프레임 -->
+  <div class="slot-wrapper">
+    <div class="slot-pointer-left">▶</div>
+    <div class="slot-pointer-right">◀</div>
+    <div class="slot-window">
+      <div id="slotReel" class="slot-reel">
+        <!-- JS에서 동적 생성 -->
+      </div>
+    </div>
   </div>
 
   <div class="controls">
@@ -216,7 +301,7 @@
       <!-- 실제 스펙 영역 -->
       <div id="specContainer" class="spec-grid">
         
-        <!-- 🟢 무기 바로 위 원형 특성 아이콘 3개 (이미지 적용) -->
+        <!-- 원형 특성 아이콘 3개 -->
         <div class="talent-container">
           <div class="talent-circle-item">
             <div class="talent-icon-circle" id="boxTalentNa">⚔️</div>
@@ -293,12 +378,9 @@
     ];
 
     let charData = JSON.parse(localStorage.getItem("genshin_roulette_v12_data")) || defaultData;
-    const colors = ["#F39C12", "#E74C3C", "#9B59B6", "#3498DB", "#2ECC71", "#1ABC9C", "#E67E22"];
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
     const spinBtn = document.getElementById("spinBtn");
-
-    let startAngle = 0, spinTime = 0, spinTimeTotal = 0, isSpinning = false;
+    let isSpinning = false;
+    let currentSequence = []; // 현재 슬롯 릴에 배치된 캐릭터 순서
 
     function saveData() { localStorage.setItem("genshin_roulette_v12_data", JSON.stringify(charData)); }
     
@@ -306,55 +388,86 @@
       return charData.filter(c => c.enabled !== false && c.level < 2); 
     }
 
+    /* 🎰 슬롯 릴 화면 렌더링 */
     function draw() {
       const activeChars = getActiveChars();
-      ctx.clearRect(0, 0, 400, 400);
+      const reel = document.getElementById("slotReel");
+      reel.style.transition = "none";
+      reel.style.transform = "translateY(0px)";
 
       if (activeChars.length === 0) {
-        ctx.fillStyle = "#FFF"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText("룰렛 대상 캐릭터가 없습니다!", 200, 200);
-        spinBtn.disabled = true; return;
-      } else { spinBtn.disabled = false; }
-
-      const arc = (2 * Math.PI) / activeChars.length;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 15px sans-serif";
-
-      for (let i = 0; i < activeChars.length; i++) {
-        const angle = startAngle + i * arc;
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.beginPath(); ctx.arc(200, 200, 185, angle, angle + arc, false); ctx.arc(200, 200, 0, angle + arc, angle, true); ctx.fill();
-
-        ctx.save(); ctx.fillStyle = "#FFF";
-        ctx.translate(200 + Math.cos(angle + arc / 2) * 125, 200 + Math.sin(angle + arc / 2) * 125);
-        ctx.rotate(angle + arc / 2 + Math.PI / 2);
-        
-        let label = activeChars[i].name;
-        if(activeChars[i].level === 1) label += "\n(준종결)";
-        ctx.fillText(label, 0, 0); ctx.restore();
+        reel.innerHTML = `
+          <div class="slot-item">
+            <span style="color:#AAA; font-size:16px;">대상 캐릭터가 없습니다!</span>
+          </div>
+        `;
+        spinBtn.disabled = true;
+        return;
+      } else { 
+        spinBtn.disabled = false; 
       }
 
-      ctx.fillStyle = "#FFF"; ctx.beginPath(); ctx.moveTo(188, 15); ctx.lineTo(212, 15); ctx.lineTo(200, 38); ctx.fill();
+      // 회전 효과를 위해 리스트를 반복(8번) 구성
+      currentSequence = [];
+      const repeatCount = 8;
+      let html = '';
+
+      for (let r = 0; r < repeatCount; r++) {
+        activeChars.forEach((c) => {
+          currentSequence.push(c);
+          const elemClass = `elem-${c.element || 'pyro'}`;
+          const photo = c.photoUrl ? `<img src="${c.photoUrl}">` : `<span style="font-size:12px; color:#888;">사진 없음</span>`;
+          
+          html += `
+            <div class="slot-item">
+              <div class="slot-avatar ${elemClass}">${photo}</div>
+              <div class="slot-char-name">${c.name} ${c.level === 1 ? '<span style="font-size:14px; color:#F39C12;">(준종결)</span>' : ''}</div>
+            </div>
+          `;
+        });
+      }
+
+      reel.innerHTML = html;
     }
 
-    function rotate() {
-      spinTime += 30;
-      if (spinTime >= spinTimeTotal) { stopRotate(); return; }
-      startAngle += ((spinTimeTotal - spinTime) / spinTimeTotal * 20 * Math.PI / 180);
-      draw(); requestAnimationFrame(rotate);
-    }
-
-    function stopRotate() {
-      isSpinning = false;
+    /* 🎰 슬롯 돌리기 실행 */
+    function spin() {
       const activeChars = getActiveChars();
-      const arc = (2 * Math.PI) / activeChars.length;
-      const degrees = startAngle * 180 / Math.PI + 90;
-      const index = Math.floor((360 - (degrees % 360)) / (arc * 180 / Math.PI)) % activeChars.length;
-      
-      const selected = activeChars[index];
-      selected.level += 1;
+      if (isSpinning || activeChars.length === 0) return;
 
-      showCharDetail(selected);
-      saveData(); draw();
+      isSpinning = true;
+      spinBtn.disabled = true;
+
+      const reel = document.getElementById("slotReel");
+      const slotHeight = window.innerWidth >= 480 ? 340 : 300; // 슬롯 카드 1개의 높이
+
+      // 랜덤으로 당첨 캐릭터 선정
+      const selectedIndex = Math.floor(Math.random() * activeChars.length);
+      const selected = activeChars[selectedIndex];
+
+      // 슬롯의 마지막 바퀴 영역에서 해당 캐릭터 위치 계산
+      const targetRepeatIndex = 6; // 6번째 반복 세트에서 정지
+      const targetGlobalIndex = (targetRepeatIndex * activeChars.length) + selectedIndex;
+      const targetPositionY = targetGlobalIndex * slotHeight;
+
+      // 리셋 후 부드럽게 감기는 스크롤 연출 적용
+      reel.style.transition = "none";
+      reel.style.transform = "translateY(0px)";
+
+      setTimeout(() => {
+        reel.style.transition = "transform 4s cubic-bezier(0.1, 0.85, 0.15, 1)";
+        reel.style.transform = `translateY(-${targetPositionY}px)`;
+      }, 50);
+
+      // 애니메이션 종료 시 데이터 처리 및 팝업 띄우기
+      setTimeout(() => {
+        isSpinning = false;
+        selected.level += 1; // 종결 단계 상승
+
+        showCharDetail(selected);
+        saveData();
+        draw(); // 슬롯 릴 상태 재설정
+      }, 4200);
     }
 
     function setTalentBox(elementId, imgUrl, defaultEmoji) {
@@ -394,9 +507,9 @@
         }
 
         /* 특성 이미지 & 레벨 출력 */
-        setTalentBox("boxTalentNa", selected.imgNa, "");
-        setTalentBox("boxTalentE", selected.imgE, "");
-        setTalentBox("boxTalentQ", selected.imgQ, "");
+        setTalentBox("boxTalentNa", selected.imgNa, "⚔️");
+        setTalentBox("boxTalentE", selected.imgE, "🌀");
+        setTalentBox("boxTalentQ", selected.imgQ, "💥");
 
         document.getElementById("valTalentNa").innerText = selected.talentNa || "1";
         document.getElementById("valTalentE").innerText = selected.talentE || "1";
@@ -422,12 +535,6 @@
       }
 
       document.getElementById("resultModal").style.display = "flex";
-    }
-
-    function spin() {
-      if (isSpinning || getActiveChars().length === 0) return;
-      isSpinning = true; spinTime = 0; spinTimeTotal = Math.random() * 3000 + 4000;
-      rotate();
     }
 
     function closeResult() { document.getElementById("resultModal").style.display = "none"; }
