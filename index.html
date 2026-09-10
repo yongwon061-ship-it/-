@@ -10,25 +10,25 @@
       font-family: 'Segoe UI', -apple-system, sans-serif;
       background: #12131C; color: #FFF;
       display: flex; flex-direction: column; align-items: center;
-      min-height: 100vh; padding: 20px 10px;
+      min-height: 100vh; padding: 15px 10px;
     }
 
-    h1 { font-size: 1.5rem; margin-bottom: 15px; color: #F1C40F; text-align: center; }
+    h1 { font-size: 1.3rem; margin-bottom: 10px; color: #F1C40F; text-align: center; }
 
     /* 🎰 슬롯머신 컨테이너 */
     .slot-wrapper {
       position: relative;
-      width: 300px;
-      height: 300px;
-      margin: 10px auto;
+      width: 280px;
+      height: 280px;
+      margin: 5px auto;
       border: 4px solid #F1C40F;
       border-radius: 20px;
       background: #1A1C29;
       overflow: hidden;
-      box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
+      box-shadow: 0 0 20px rgba(241, 196, 15, 0.25);
     }
     @media (min-width: 480px) { 
-      .slot-wrapper { width: 340px; height: 340px; } 
+      .slot-wrapper { width: 320px; height: 320px; } 
     }
 
     .slot-window {
@@ -50,7 +50,7 @@
 
     .slot-item {
       width: 100%;
-      height: 300px;
+      height: 280px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -59,13 +59,13 @@
       padding: 10px;
     }
     @media (min-width: 480px) { 
-      .slot-item { height: 340px; } 
+      .slot-item { height: 320px; } 
     }
 
     /* 슬롯 내부 초상화 */
     .slot-avatar {
-      width: 140px;
-      height: 140px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       background: #2A2D45;
       border: 4px solid #777;
@@ -73,13 +73,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.6);
     }
     .slot-avatar img { width: 100%; height: 100%; object-fit: cover; }
     
     .slot-char-name {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: #FFF;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
@@ -90,7 +90,7 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 22px;
+      font-size: 20px;
       color: #F1C40F;
       z-index: 10;
       text-shadow: 0 0 8px rgba(241, 196, 15, 0.8);
@@ -99,9 +99,9 @@
     .slot-pointer-right { right: 8px; }
 
     /* 버튼 컨트롤 영역 */
-    .controls { display: flex; gap: 8px; margin-top: 20px; width: 100%; max-width: 380px; }
+    .controls { display: flex; gap: 8px; margin-top: 15px; width: 100%; max-width: 380px; }
     .btn {
-      flex: 1; padding: 14px 0; font-size: 15px; cursor: pointer; border: none;
+      flex: 1; padding: 12px 0; font-size: 14px; cursor: pointer; border: none;
       border-radius: 12px; font-weight: bold; transition: 0.2s;
     }
     .btn-spin { background: linear-gradient(135deg, #FF4B2B, #FF416C); color: #FFF; flex: 1.2; }
@@ -113,121 +113,121 @@
     .modal-backdrop {
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
-      justify-content: center; align-items: center; z-index: 1000; padding: 15px;
+      justify-content: center; align-items: center; z-index: 1000; padding: 10px;
     }
 
-    /* 결과 카드 모달 */
+    /* 📱 모바일 맞춤 컴팩트 결과 카드 모달 */
     .result-card {
       position: relative; background: #1E2030; border: 2px solid #F1C40F;
-      border-radius: 20px; width: 100%; max-width: 420px; padding: 20px;
-      box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+      border-radius: 16px; width: 100%; max-width: 380px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 12px 14px;
+      box-shadow: 0 0 25px rgba(241, 196, 15, 0.2);
       display: flex; flex-direction: column; align-items: center;
       animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
     .close-btn {
-      position: absolute; top: 12px; right: 15px; width: 32px; height: 32px;
+      position: absolute; top: 8px; right: 10px; width: 28px; height: 28px;
       border-radius: 50%; background: rgba(255,255,255,0.1); border: none;
-      color: #AAA; font-size: 20px; cursor: pointer; z-index: 10;
+      color: #AAA; font-size: 18px; cursor: pointer; z-index: 10;
     }
 
-    /* 상단 비주얼 영역 */
+    /* 상단 비주얼 영역 (크기 축소) */
     .char-avatar-frame {
-      width: 100px; height: 100px; border-radius: 50%;
-      background: #2A2D45; border: 4px solid #777;
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #2A2D45; border: 3px solid #777;
       overflow: hidden; display: flex; align-items: center; justify-content: center;
-      margin-top: 5px; margin-bottom: 8px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      margin-top: 2px; margin-bottom: 4px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
     .char-avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
 
     /* 원소별 테두리 색상 */
-    .elem-pyro { border-color: #FF4D4D !important; box-shadow: 0 0 15px rgba(255, 77, 77, 0.4); }
-    .elem-hydro { border-color: #3399FF !important; box-shadow: 0 0 15px rgba(51, 153, 255, 0.4); }
-    .elem-anemo { border-color: #2ECC71 !important; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
-    .elem-electro { border-color: #A64DFF !important; box-shadow: 0 0 15px rgba(166, 77, 255, 0.4); }
-    .elem-dendro { border-color: #7ACC29 !important; box-shadow: 0 0 15px rgba(122, 204, 41, 0.4); }
-    .elem-cryo { border-color: #80E5FF !important; box-shadow: 0 0 15px rgba(128, 229, 255, 0.4); }
-    .elem-geo { border-color: #F1C40F !important; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+    .elem-pyro { border-color: #FF4D4D !important; box-shadow: 0 0 10px rgba(255, 77, 77, 0.4); }
+    .elem-hydro { border-color: #3399FF !important; box-shadow: 0 0 10px rgba(51, 153, 255, 0.4); }
+    .elem-anemo { border-color: #2ECC71 !important; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+    .elem-electro { border-color: #A64DFF !important; box-shadow: 0 0 10px rgba(166, 77, 255, 0.4); }
+    .elem-dendro { border-color: #7ACC29 !important; box-shadow: 0 0 10px rgba(122, 204, 41, 0.4); }
+    .elem-cryo { border-color: #80E5FF !important; box-shadow: 0 0 10px rgba(128, 229, 255, 0.4); }
+    .elem-geo { border-color: #F1C40F !important; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
 
-    .char-name-title { font-size: 20px; font-weight: bold; color: #FFF; margin-bottom: 4px; }
-    .char-status-badge { font-size: 13px; font-weight: bold; padding: 3px 10px; border-radius: 12px; margin-bottom: 12px; }
+    .char-name-title { font-size: 17px; font-weight: bold; color: #FFF; margin-bottom: 2px; }
+    .char-status-badge { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
     .badge-none { background: rgba(149, 165, 166, 0.2); color: #95A5A6; border: 1px solid #95A5A6; }
     .badge-semi { background: rgba(243, 156, 18, 0.2); color: #F39C12; border: 1px solid #F39C12; }
     .badge-final { background: rgba(231, 76, 60, 0.2); color: #E74C3C; border: 1px solid #E74C3C; }
 
-    /* 원신 스타일 동그라미 특성 아이콘 디자인 */
+    /* 원형 특성 아이콘 (크기 축소) */
     .talent-container {
-      display: flex; justify-content: center; gap: 24px;
-      width: 100%; margin-bottom: 10px; padding: 8px 0;
+      display: flex; justify-content: center; gap: 16px;
+      width: 100%; margin-bottom: 6px; padding: 2px 0;
     }
     .talent-circle-item {
       display: flex; flex-direction: column; align-items: center; position: relative;
     }
     .talent-icon-circle {
-      width: 50px; height: 50px; border-radius: 50%;
+      width: 38px; height: 38px; border-radius: 50%;
       background: radial-gradient(circle, #3A3D5D 0%, #1A1B29 100%);
       border: 2px solid #F1C40F; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px; box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+      font-size: 15px; box-shadow: 0 0 8px rgba(241, 196, 15, 0.2);
     }
-    .talent-icon-circle img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    .talent-icon-circle img { width: 100%; height: 100%; object-fit: cover; }
     .talent-lvl-badge {
-      position: absolute; bottom: -6px; background: #282B42;
-      border: 1px solid #F1C40F; border-radius: 10px;
-      padding: 1px 6px; font-size: 10px; font-weight: bold; color: #FFF;
+      position: absolute; bottom: -5px; background: #282B42;
+      border: 1px solid #F1C40F; border-radius: 8px;
+      padding: 0px 5px; font-size: 9px; font-weight: bold; color: #FFF;
       z-index: 2;
     }
 
-    /* 하단 스펙 그리드 레이아웃 */
-    .spec-grid { width: 100%; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
-    .spec-row { background: #141522; padding: 8px 12px; border-radius: 8px; border: 1px solid #2C2F48; display: flex; align-items: center; }
-    .spec-row-multi { display: grid; gap: 8px; }
+    /* 하단 스펙 그리드 레이아웃 (간격 및 패딩 축소) */
+    .spec-grid { width: 100%; display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+    .spec-row { background: #141522; padding: 5px 10px; border-radius: 6px; border: 1px solid #2C2F48; display: flex; align-items: center; }
+    .spec-row-multi { display: grid; gap: 5px; }
     .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
     .grid-2 { grid-template-columns: 1fr 1fr; }
     
-    .spec-item { background: #141522; padding: 8px 10px; border-radius: 8px; border: 1px solid #2C2F48; text-align: center; }
-    .spec-label { font-size: 11px; color: #888; margin-bottom: 2px; }
-    .spec-val { font-weight: bold; color: #FFF; }
+    .spec-item { background: #141522; padding: 5px 6px; border-radius: 6px; border: 1px solid #2C2F48; text-align: center; }
+    .spec-label { font-size: 10px; color: #888; margin-bottom: 1px; }
+    .spec-val { font-weight: bold; color: #FFF; font-size: 12px; }
 
-    /* 메모 박스 */
+    /* 메모 박스 축소 */
     .spec-memo-box {
-      background: #141522; border: 1px dashed #3F4468; border-radius: 8px;
-      padding: 10px 12px; font-size: 12px; color: #DDD; line-height: 1.4;
+      background: #141522; border: 1px dashed #3F4468; border-radius: 6px;
+      padding: 6px 10px; font-size: 11px; color: #DDD; line-height: 1.3;
       white-space: pre-wrap; word-break: break-word; text-align: left;
     }
 
     /* 잠김 안내 상자 */
     .locked-box {
-      background: #141522; border: 1px dashed #E74C3C; border-radius: 12px;
-      padding: 25px 15px; text-align: center; color: #888; font-size: 13px; line-height: 1.6;
-      width: 100%; margin-top: 10px;
+      background: #141522; border: 1px dashed #E74C3C; border-radius: 10px;
+      padding: 15px 10px; text-align: center; color: #888; font-size: 12px; line-height: 1.5;
+      width: 100%; margin-top: 5px;
     }
 
     /* 📋 목록 모달 스타일 */
     .list-modal-card {
-      background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px;
-      max-height: 80vh; padding: 20px; display: flex; flex-direction: column; gap: 12px;
+      background: #1E2030; border-radius: 16px; width: 100%; max-width: 420px;
+      max-height: 80vh; padding: 15px; display: flex; flex-direction: column; gap: 10px;
       position: relative; border: 1px solid #3F4468;
     }
-    .char-card-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+    .char-card-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
     .char-select-card {
-      background: #282B42; border-radius: 12px; padding: 12px; display: flex;
+      background: #282B42; border-radius: 10px; padding: 8px 10px; display: flex;
       align-items: center; justify-content: space-between; cursor: pointer;
       border: 1px solid #3F4468; transition: 0.2s;
     }
     .char-select-card:hover { border-color: #F1C40F; background: #323652; }
 
     /* ⚙️ 설정 모달 스타일 */
-    .setting-card { background: #1E2030; border-radius: 20px; width: 100%; max-width: 480px; max-height: 85vh; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .setting-add-row { display: flex; gap: 8px; align-items: center; }
+    .setting-card { background: #1E2030; border-radius: 16px; width: 100%; max-width: 450px; max-height: 85vh; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .setting-add-row { display: flex; gap: 6px; align-items: center; }
     .btn-add-char {
       background: linear-gradient(135deg, #27ae60, #2ecc71);
-      color: #FFF; border: none; border-radius: 8px;
-      padding: 10px 20px; font-size: 14px; font-weight: bold;
+      color: #FFF; border: none; border-radius: 6px;
+      padding: 8px 14px; font-size: 13px; font-weight: bold;
       cursor: pointer; white-space: nowrap; transition: 0.2s;
     }
 
@@ -238,26 +238,26 @@
     }
 
     /* ON/OFF 스위치 토글 스타일 */
-    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #4A4D68; transition: .3s; border-radius: 22px;
+      background-color: #4A4D68; transition: .3s; border-radius: 20px;
     }
     .slider:before {
-      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
       background-color: white; transition: .3s; border-radius: 50%;
     }
     input:checked + .slider { background-color: #2ECC71; }
-    input:checked + .slider:before { transform: translateX(22px); }
+    input:checked + .slider:before { transform: translateX(20px); }
 
-    .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .setting-item { background: #282B42; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .talent-input-group { display: flex; flex-direction: column; gap: 4px; background: #1A1C2B; padding: 8px; border-radius: 8px; }
+    .setting-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .setting-item { background: #282B42; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .talent-input-group { display: flex; flex-direction: column; gap: 4px; background: #1A1C2B; padding: 6px; border-radius: 6px; }
     .talent-input-row { display: flex; gap: 4px; }
     
-    input[type="text"], select, textarea { background: #141522; color: #FFF; border: 1px solid #3F4468; padding: 8px; border-radius: 6px; font-size: 12px; width: 100%; }
-    textarea { resize: vertical; min-height: 40px; font-family: inherit; }
+    input[type="text"], select, textarea { background: #141522; color: #FFF; border: 1px solid #3F4468; padding: 6px; border-radius: 5px; font-size: 11px; width: 100%; }
+    textarea { resize: vertical; min-height: 36px; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -287,7 +287,7 @@
       <button class="close-btn" onclick="closeResult()">&times;</button>
       
       <div class="char-avatar-frame" id="resultAvatar">
-        <span style="color: #6C7293; font-size: 11px;">사진 없음</span>
+        <span style="color: #6C7293; font-size: 10px;">사진 없음</span>
       </div>
       <div class="char-name-title" id="resultName">캐릭터 이름</div>
       <div class="char-status-badge" id="resultStatus">육성 단계</div>
@@ -317,8 +317,8 @@
           </div>
         </div>
 
-        <div class="spec-row"><span class="spec-label" style="width:50px;">무기</span><span class="spec-val" id="valWeapon">-</span></div>
-        <div class="spec-row"><span class="spec-label" style="width:50px;">성유물</span><span class="spec-val" id="valArtifact">-</span></div>
+        <div class="spec-row"><span class="spec-label" style="width:45px;">무기</span><span class="spec-val" id="valWeapon">-</span></div>
+        <div class="spec-row"><span class="spec-label" style="width:45px;">성유물</span><span class="spec-val" id="valArtifact">-</span></div>
         
         <div class="spec-row-multi grid-3">
           <div class="spec-item"><div class="spec-label">공격력</div><div class="spec-val" id="valAtk">-</div></div>
@@ -337,7 +337,7 @@
         </div>
 
         <div id="memoRow" class="spec-memo-box">
-          <div class="spec-label" style="margin-bottom: 4px; color: #F1C40F;">📌 참고 메모</div>
+          <div class="spec-label" style="margin-bottom: 2px; color: #F1C40F;">📌 참고 메모</div>
           <div id="valMemo" style="color: #EEE;">-</div>
         </div>
       </div>
@@ -348,7 +348,7 @@
   <div id="listModal" class="modal-backdrop">
     <div class="list-modal-card">
       <button class="close-btn" onclick="closeList()">&times;</button>
-      <h2 style="font-size: 16px; color: #6dd5ed; margin-bottom: 5px;">📋 캐릭터 도감</h2>
+      <h2 style="font-size: 15px; color: #6dd5ed; margin-bottom: 4px;">📋 캐릭터 도감</h2>
       <div class="char-card-list" id="charCardList"></div>
     </div>
   </div>
@@ -357,7 +357,7 @@
   <div id="settingModal" class="modal-backdrop">
     <div class="setting-card">
       <button class="close-btn" onclick="closeSetting()">&times;</button>
-      <h2 style="font-size: 16px; color: #F1C40F;">⚙️ 캐릭터 세팅 및 스펙 설정</h2>
+      <h2 style="font-size: 15px; color: #F1C40F;">⚙️ 캐릭터 세팅 및 스펙 설정</h2>
       
       <div class="setting-add-row">
         <input type="text" id="newCharName" placeholder="새 캐릭터 이름 입력">
@@ -365,8 +365,8 @@
       </div>
 
       <div class="setting-list" id="settingList"></div>
-      <div style="text-align: right; margin-top: 5px;">
-        <button class="btn btn-setting" style="padding: 10px 20px; font-size: 13px;" onclick="closeSetting()">저장 및 완료</button>
+      <div style="text-align: right; margin-top: 4px;">
+        <button class="btn btn-setting" style="padding: 8px 16px; font-size: 12px;" onclick="closeSetting()">저장 및 완료</button>
       </div>
     </div>
   </div>
@@ -380,7 +380,7 @@
     let charData = JSON.parse(localStorage.getItem("genshin_roulette_v12_data")) || defaultData;
     const spinBtn = document.getElementById("spinBtn");
     let isSpinning = false;
-    let currentSequence = []; // 현재 슬롯 릴에 배치된 캐릭터 순서
+    let currentSequence = [];
 
     function saveData() { localStorage.setItem("genshin_roulette_v12_data", JSON.stringify(charData)); }
     
@@ -398,7 +398,7 @@
       if (activeChars.length === 0) {
         reel.innerHTML = `
           <div class="slot-item">
-            <span style="color:#AAA; font-size:16px;">대상 캐릭터가 없습니다!</span>
+            <span style="color:#AAA; font-size:14px;">대상 캐릭터가 없습니다!</span>
           </div>
         `;
         spinBtn.disabled = true;
@@ -407,7 +407,6 @@
         spinBtn.disabled = false; 
       }
 
-      // 회전 효과를 위해 리스트를 반복(8번) 구성
       currentSequence = [];
       const repeatCount = 8;
       let html = '';
@@ -416,12 +415,12 @@
         activeChars.forEach((c) => {
           currentSequence.push(c);
           const elemClass = `elem-${c.element || 'pyro'}`;
-          const photo = c.photoUrl ? `<img src="${c.photoUrl}">` : `<span style="font-size:12px; color:#888;">사진 없음</span>`;
+          const photo = c.photoUrl ? `<img src="${c.photoUrl}">` : `<span style="font-size:11px; color:#888;">사진 없음</span>`;
           
           html += `
             <div class="slot-item">
               <div class="slot-avatar ${elemClass}">${photo}</div>
-              <div class="slot-char-name">${c.name} ${c.level === 1 ? '<span style="font-size:14px; color:#F39C12;">(준종결)</span>' : ''}</div>
+              <div class="slot-char-name">${c.name} ${c.level === 1 ? '<span style="font-size:13px; color:#F39C12;">(준종결)</span>' : ''}</div>
             </div>
           `;
         });
@@ -439,18 +438,15 @@
       spinBtn.disabled = true;
 
       const reel = document.getElementById("slotReel");
-      const slotHeight = window.innerWidth >= 480 ? 340 : 300; // 슬롯 카드 1개의 높이
+      const slotHeight = window.innerWidth >= 480 ? 320 : 280;
 
-      // 랜덤으로 당첨 캐릭터 선정
       const selectedIndex = Math.floor(Math.random() * activeChars.length);
       const selected = activeChars[selectedIndex];
 
-      // 슬롯의 마지막 바퀴 영역에서 해당 캐릭터 위치 계산
-      const targetRepeatIndex = 6; // 6번째 반복 세트에서 정지
+      const targetRepeatIndex = 6;
       const targetGlobalIndex = (targetRepeatIndex * activeChars.length) + selectedIndex;
       const targetPositionY = targetGlobalIndex * slotHeight;
 
-      // 리셋 후 부드럽게 감기는 스크롤 연출 적용
       reel.style.transition = "none";
       reel.style.transform = "translateY(0px)";
 
@@ -459,14 +455,13 @@
         reel.style.transform = `translateY(-${targetPositionY}px)`;
       }, 50);
 
-      // 애니메이션 종료 시 데이터 처리 및 팝업 띄우기
       setTimeout(() => {
         isSpinning = false;
-        selected.level += 1; // 종결 단계 상승
+        selected.level += 1;
 
         showCharDetail(selected);
         saveData();
-        draw(); // 슬롯 릴 상태 재설정
+        draw();
       }, 4200);
     }
 
@@ -487,7 +482,7 @@
 
       const avatar = document.getElementById("resultAvatar");
       avatar.className = `char-avatar-frame elem-${selected.element || 'pyro'}`;
-      avatar.innerHTML = selected.photoUrl ? `<img src="${selected.photoUrl}">` : '<span style="color:#6C7293; font-size:11px;">사진 없음</span>';
+      avatar.innerHTML = selected.photoUrl ? `<img src="${selected.photoUrl}">` : '<span style="color:#6C7293; font-size:10px;">사진 없음</span>';
 
       if (selected.level === 0) {
         statusEl.innerText = "🔒 미해금 캐릭터";
@@ -506,7 +501,6 @@
           statusEl.className = "char-status-badge badge-final";
         }
 
-        /* 특성 이미지 & 레벨 출력 */
         setTalentBox("boxTalentNa", selected.imgNa, "⚔️");
         setTalentBox("boxTalentE", selected.imgE, "🌀");
         setTalentBox("boxTalentQ", selected.imgQ, "💥");
@@ -546,7 +540,7 @@
       const visibleChars = charData.filter(c => c.enabled !== false);
 
       if (visibleChars.length === 0) {
-        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>활성화된 캐릭터가 없습니다.</div>";
+        listContainer.innerHTML = "<div style='text-align:center; color:#888; padding:15px;'>활성화된 캐릭터가 없습니다.</div>";
       } else {
         visibleChars.forEach((c) => {
           let badgeText = "🔒 미해금";
@@ -558,11 +552,11 @@
           card.className = "char-select-card";
           card.onclick = () => { closeList(); showCharDetail(c); };
           card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div class="char-avatar-frame elem-${c.element || 'pyro'}" style="width:40px; height:40px; margin:0; border-width:2px;">
-                ${c.photoUrl ? `<img src="${c.photoUrl}">` : '<span style="font-size:9px; color:#888;">N/A</span>'}
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="char-avatar-frame elem-${c.element || 'pyro'}" style="width:34px; height:34px; margin:0; border-width:2px;">
+                ${c.photoUrl ? `<img src="${c.photoUrl}">` : '<span style="font-size:8px; color:#888;">N/A</span>'}
               </div>
-              <strong style="font-size:14px; color:#FFF;">${c.name}</strong>
+              <strong style="font-size:13px; color:#FFF;">${c.name}</strong>
             </div>
             <span class="char-status-badge ${badgeClass}" style="margin:0;">${badgeText}</span>
           `;
@@ -593,16 +587,16 @@
         const item = document.createElement("div"); item.className = "setting-item";
         item.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
               <label class="switch">
                 <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="charData[${i}].enabled = this.checked">
                 <span class="slider"></span>
               </label>
-              <strong style="color:#F1C40F; font-size:14px;">${c.name}</strong>
+              <strong style="color:#F1C40F; font-size:13px;">${c.name}</strong>
             </div>
             <button class="btn-del-char" onclick="deleteChar(${i})">삭제</button>
           </div>
-          <div style="display:flex; gap:6px;">
+          <div style="display:flex; gap:4px;">
             <select onchange="charData[${i}].element=this.value">
               <option value="pyro" ${c.element==='pyro'?'selected':''}> 불</option>
               <option value="hydro" ${c.element==='hydro'?'selected':''}> 물</option>
@@ -615,20 +609,19 @@
             <input type="text" placeholder="초상화 이미지 URL" value="${c.photoUrl||''}" onchange="charData[${i}].photoUrl=this.value">
           </div>
 
-          <!-- 특성 이미지 URL & 레벨 설정 -->
           <div class="talent-input-group">
-            <span style="font-size:11px; color:#F1C40F; font-weight:bold;">✨ 특성 이미지 URL & 레벨</span>
+            <span style="font-size:10px; color:#F1C40F; font-weight:bold;">✨ 특성 이미지 URL & 레벨</span>
             <div class="talent-input-row">
               <input type="text" placeholder="평타 이미지 URL" value="${c.imgNa||''}" onchange="charData[${i}].imgNa=this.value">
-              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
+              <input type="text" placeholder="레벨" style="width:45px;" value="${c.talentNa||''}" onchange="charData[${i}].talentNa=this.value">
             </div>
             <div class="talent-input-row">
               <input type="text" placeholder="E스킬 이미지 URL" value="${c.imgE||''}" onchange="charData[${i}].imgE=this.value">
-              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
+              <input type="text" placeholder="레벨" style="width:45px;" value="${c.talentE||''}" onchange="charData[${i}].talentE=this.value">
             </div>
             <div class="talent-input-row">
               <input type="text" placeholder="Q스킬 이미지 URL" value="${c.imgQ||''}" onchange="charData[${i}].imgQ=this.value">
-              <input type="text" placeholder="레벨" style="width:50px;" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
+              <input type="text" placeholder="레벨" style="width:45px;" value="${c.talentQ||''}" onchange="charData[${i}].talentQ=this.value">
             </div>
           </div>
 
